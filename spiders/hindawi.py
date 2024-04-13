@@ -26,7 +26,6 @@ class Hindawi:
         links = []
         last_page = int(self.get_last_page())
         print(f"Last page:{last_page}")
-
         for page_number in range(1, last_page + 1):
             print(page_number)
             response = requests.get(f'https://www.hindawi.com/search/all/{self.word}/page/'+str(page_number)+'/',proxies={
