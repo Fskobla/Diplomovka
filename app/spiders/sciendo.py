@@ -2,6 +2,8 @@ import json
 
 import requests
 from bs4 import BeautifulSoup
+from app import db
+from app.models import Links, Authors, Citations, Keywords
 
 
 class Sciendo:
@@ -46,7 +48,6 @@ class Sciendo:
         return links
 
     def scrape_links(self):
-        items = []
         links = self.get_links()
 
         headers = {
@@ -61,48 +62,46 @@ class Sciendo:
             'Sec-Fetch-Site': 'same-site',
         }
 
-        for i in range(len(links)):
+        for i in range(10):
             response = requests.get(links[i], headers=headers)
             print(response.encoding)
 
             if response.status_code == 200:
                 page = BeautifulSoup(response.content, features='html.parser')
-
-                data = json.loads(page.find('script', id="__NEXT_DATA__", type='application/json').text.encode('utf-8'))
-
-                link = response.url
-                description = data['props']['pageProps']['product']['longDescription']
-                article_title = data['props']['pageProps']['product']['articleData']['articleTitle']
-                authors = get_authors(data['props']['pageProps']['product']['articleData']['contribGroup']['contrib'])
-
                 try:
-                    keywords = data['props']['pageProps']['product']['articleData']['keywords']
+                    data = json.loads(
+                        page.find('script', id="__NEXT_DATA__", type='application/json').text.encode('utf-8'))
+
+                    link = response.url
+                    description = data['props']['pageProps']['product']['longDescription']
+                    article_title = data['props']['pageProps']['product']['articleData']['articleTitle']
+                    authors = get_authors(
+                        data['props']['pageProps']['product']['articleData']['contribGroup']['contrib'])
+                    image = data['props']['pageProps']['product']['coverUrl']
+                    date = data['props']['pageProps']['product']['articleData']['publishedDate']
+
+                    if data['props']['pageProps']['product']['articleData']['keywords'] is not None:
+                        keywords = data['props']['pageProps']['product']['articleData']['keywords']
+                    else:
+                        keywords = []
+
+                    if data['props']['pageProps']['product']['articleData']['referenceList'] is not None:
+                        citations = get_citations(data['props']['pageProps']['product']['articleData']['referenceList'])
+                    else:
+                        citations = []
+
+                    db_citations = [Citations(reference=citation) for citation in citations]
+                    db_keywords = [Keywords(word=keyword) for keyword in keywords]
+                    db_authors = [Authors(name=name) for name in authors]
+                    db_links = Links(link=link, word=self.word, description=description, article_title=article_title,
+                                     image=image, date=date, authors=db_authors, keywords=db_keywords,
+                                     citations=db_citations)
+                    db.session.add(db_links)
+                    db.session.commit()
                 except:
-                    keywords = []
-
-                image = data['props']['pageProps']['product']['coverUrl']
-                date = data['props']['pageProps']['product']['articleData']['publishedDate']
-
-                try:
-                    citations = get_citations(data['props']['pageProps']['product']['articleData']['referenceList'])
-                except:
-                    citations = []
-
-                item = {
-                    'link': link,
-                    'description': description,
-                    'article_title': article_title,
-                    'authors': authors,
-                    'keywords': keywords,
-                    'image': image,
-                    'date': date,
-                    'citations': citations,
-                }
-
-                print(item)
-                items.append(item)
-
-        return items
+                    db.session.rollback()
+                finally:
+                    db.session.close()
 
 
 def get_authors(authors_json):

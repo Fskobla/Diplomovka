@@ -1,10 +1,11 @@
 from flask import render_template, request
-from spiders.hindawi import Hindawi
+from . import create_app
+from app.spiders.hindawi import Hindawi
+from app.spiders.sciendo import Sciendo
 import time
 
 
-def register_routes(app):
-
+def init_app_routes(app):
     @app.route('/', methods=['GET', 'POST'])
     def index():
         start = time.time()
@@ -15,14 +16,17 @@ def register_routes(app):
             if request.form.get('hindawi_value') == 'true':
                 hindawi = Hindawi(word)
                 hindawi.scrape_links()
+            if request.form.get('sciendo_value') == 'true':
+                sciendo = Sciendo(word)
+                sciendo.scrape_links()
         end = time.time()
-        print(end-start)
+        print(end - start)
         return render_template('index.html')
-    
+
     @app.route('/graph')
     def graph():
         return render_template('graph.html')
-    
+
     @app.route('/literature')
     def literature():
         return render_template('literature.html')

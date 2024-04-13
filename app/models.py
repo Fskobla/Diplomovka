@@ -1,10 +1,11 @@
-from db import db
+from . import db
 
 
 class Links(db.Model):
     __tablename__ = "links"
     id = db.Column(db.Integer, primary_key=True)
     link = db.Column(db.Text(), unique=True, nullable=False)
+    word = db.Column(db.String(30))
     description = db.Column(db.Text())
     article_title = db.Column(db.Text())
     image = db.Column(db.Text())
@@ -18,7 +19,7 @@ class Links(db.Model):
 
 
 class Keywords(db.Model):
-    _tablename__ = "keywords"
+    __tablename__ = "keywords"
     id = db.Column(db.Integer, primary_key=True)
     link_id = db.Column(db.Integer, db.ForeignKey('links.id'))
     word = db.Column(db.Text())
@@ -28,7 +29,7 @@ class Keywords(db.Model):
 
 
 class Citations(db.Model):
-    _tablename__ = "citations"
+    __tablename__ = "citations"
     id = db.Column(db.Integer, primary_key=True)
     link_id = db.Column(db.Integer, db.ForeignKey('links.id'))
     reference = db.Column(db.Text())
@@ -38,7 +39,7 @@ class Citations(db.Model):
 
 
 class Authors(db.Model):
-    _tablename__ = "authors"
+    __tablename__ = "authors"
     id = db.Column(db.Integer, primary_key=True)
     link_id = db.Column(db.Integer, db.ForeignKey('links.id'))
     name = db.Column(db.Text())
