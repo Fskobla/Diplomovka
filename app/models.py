@@ -1,10 +1,11 @@
-from db import db
+from . import db
 
 
 class Links(db.Model):
     __tablename__ = "links"
     id = db.Column(db.Integer, primary_key=True)
     link = db.Column(db.Text(), unique=True, nullable=False)
+    word = db.Column(db.String(30))
     description = db.Column(db.Text())
     article_title = db.Column(db.Text())
     image = db.Column(db.Text())
@@ -16,9 +17,23 @@ class Links(db.Model):
     def __repr__(self):
         return f'Link: {self.link}'
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'link': self.link,
+            'word': self.word,
+            'description': self.description,
+            'article_title': self.article_title,
+            'image': self.image,
+            'date': self.date,
+            'authors': [author.to_dict() for author in self.authors],
+            'keywords': [keyword.to_dict() for keyword in self.keywords],
+            'citations': [citation.to_dict() for citation in self.citations]
+        }
+
 
 class Keywords(db.Model):
-    _tablename__ = "keywords"
+    __tablename__ = "keywords"
     id = db.Column(db.Integer, primary_key=True)
     link_id = db.Column(db.Integer, db.ForeignKey('links.id'))
     word = db.Column(db.Text())
@@ -26,9 +41,16 @@ class Keywords(db.Model):
     def __repr__(self):
         return f'Keyword: {self.word}'
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'link_id': self.link_id,
+            'word': self.word
+        }
+
 
 class Citations(db.Model):
-    _tablename__ = "citations"
+    __tablename__ = "citations"
     id = db.Column(db.Integer, primary_key=True)
     link_id = db.Column(db.Integer, db.ForeignKey('links.id'))
     reference = db.Column(db.Text())
@@ -36,12 +58,26 @@ class Citations(db.Model):
     def __repr__(self):
         return f'Citation: {self.reference}'
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'link_id': self.link_id,
+            'reference': self.reference
+        }
+
 
 class Authors(db.Model):
-    _tablename__ = "authors"
+    __tablename__ = "authors"
     id = db.Column(db.Integer, primary_key=True)
     link_id = db.Column(db.Integer, db.ForeignKey('links.id'))
     name = db.Column(db.Text())
 
     def __repr__(self):
         return f'Author: {self.name}'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'link_id': self.link_id,
+            'name': self.name
+        }

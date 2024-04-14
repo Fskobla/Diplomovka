@@ -1,10 +1,9 @@
-import time
 import requests
 from bs4 import BeautifulSoup
 import re
 import yake
 from app import db
-from models import Links,Authors,Citations,Keywords
+from app.models import Links, Authors, Citations, Keywords
 
 
 class Hindawi:
@@ -51,7 +50,7 @@ class Hindawi:
         bad_links = 0
         links = self.get_links()
 
-        for i in range(len(links)):
+        for i in range(10):
             response = requests.get(links[i], proxies={
                             "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
                             "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
@@ -73,16 +72,12 @@ class Hindawi:
                         "li", class_="ArticleReferences_articleReference__ouEuh")
                     
                     print(link)
-                    db_links = Links(link=link, description=description, article_title=article_title, image=image, date=date)
-                    try:
-                        db.session.add(db_links)
-                        db.session.commit()
-                        get_citations(citations_array, db_links)
-                        get_authors(authors_array, db_links)
-                        extract_keywords(description, db_links)
-                    except:
-                        print(f"PASSED {link}")
-                        pass
+                    db_citations = [Citations(reference=citation) for citation in get_citations(citations_array)]
+                    db_keywords = [Keywords(word=keyword) for keyword in extract_keywords(description)]
+                    db_authors = [Authors(name=name) for name in get_authors(authors_array)]
+                    db_links = Links(link=link, word=self.word, description=description, article_title=article_title, image=image, date=date, authors=db_authors, keywords=db_keywords, citations=db_citations)
+                    db.session.add(db_links)
+                    db.session.commit()
                 except Exception as e:
                     print(e)
                     db.session.rollback()
@@ -91,25 +86,26 @@ class Hindawi:
                     db.session.close()
 
 
-def get_authors(authors_array, db_links):
+def get_authors(authors_array):
+    authors = []
     for author in authors_array:
         full_author = re.sub("[1-9,]", "", author.text)
         full_author = re.sub("and ", "", full_author)
-        db_authors = Authors(name=full_author, link_id=db_links.id)
-        db.session.add(db_authors)
-        db.session.commit()
+        authors.append(full_author)
+    return authors
 
 
 
-def get_citations(citations_array, db_links):
+def get_citations(citations_array):
+    citations = []
     for citation in citations_array:
         reference = citation.find("div", class_="referenceContent").find("p", class_="referenceText").text
-        db_citations = Citations(reference=reference, link_id=db_links.id)
-        db.session.add(db_citations)
-        db.session.commit()
+        citations.append(reference)
+    return citations
 
 
-def extract_keywords(text, db_links):
+def extract_keywords(text):
+    keywords = []
     language = "en"
     max_ngram_size = 3
     deduplication_thresold = 0.9
@@ -124,6 +120,5 @@ def extract_keywords(text, db_links):
 
     for kw, s in all_keywords:
         if s > 0.01:
-            keyword = Keywords(word=kw, link_id=db_links.id)
-            db.session.add(keyword)
-            db.session.commit()
+            keywords.append(kw)
+    return keywords
