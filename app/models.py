@@ -17,6 +17,20 @@ class Links(db.Model):
     def __repr__(self):
         return f'Link: {self.link}'
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'link': self.link,
+            'word': self.word,
+            'description': self.description,
+            'article_title': self.article_title,
+            'image': self.image,
+            'date': self.date,
+            'authors': [author.to_dict() for author in self.authors],
+            'keywords': [keyword.to_dict() for keyword in self.keywords],
+            'citations': [citation.to_dict() for citation in self.citations]
+        }
+
 
 class Keywords(db.Model):
     __tablename__ = "keywords"
@@ -26,6 +40,13 @@ class Keywords(db.Model):
 
     def __repr__(self):
         return f'Keyword: {self.word}'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'link_id': self.link_id,
+            'word': self.word
+        }
 
 
 class Citations(db.Model):
@@ -37,6 +58,13 @@ class Citations(db.Model):
     def __repr__(self):
         return f'Citation: {self.reference}'
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'link_id': self.link_id,
+            'reference': self.reference
+        }
+
 
 class Authors(db.Model):
     __tablename__ = "authors"
@@ -46,3 +74,10 @@ class Authors(db.Model):
 
     def __repr__(self):
         return f'Author: {self.name}'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'link_id': self.link_id,
+            'name': self.name
+        }
