@@ -4,69 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webscrapnito</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.7.2/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="#">bOOk app</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/app/static">Search</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/literature">Articles</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/graph">Graph</a>
-                    </li>
-                </ul>
+    <div class="wrapper">
+        <div class="flex-container">
+            <div class="logo flex-item-right">
+                <img id="logo" src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo">
             </div>
         </div>
-    </nav>
-
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-12">
-                <form class="mb-5" method="POST" margin="center">
-                    <div class="form-group">
-                        <label for="title">Search word:</label>
-                        <input type="text" name="search_word"  class="form-control" id="search_word" placeholder="Enter word">
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" id="hindawi_value" name="hindawi_value" value="true">
-                        <label class="form-check-label" for="hindawi_value">Hindawi</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" id="sciendo_value" name="sciendo_value" value="true">
-                        <label class="form-check-label" for="sciendo_value">Sciendo</label>
-                    </div>
-                    <button type="submit" class="btn btn-primary float-right">Search</button>
-                </form>
+        <form id="searchForm" method="POST">
+            <div class="search-bar">
+                <span id="search-icon-button" type="submit" class="search-icon material-symbols-outlined">search</span>
+                <input class="search-input" id="search_word" name="search_word" type="search" placeholder="Enter word">
+                <span id="search-close" class="search-icon material-symbols-outlined">close</span>
+                <span id="search-icon-options" class="search-icon material-symbols-outlined">expand_more</span>
             </div>
-        </div>
+            <div class="search-bar-options">
+                <label class="label" for="hindawi_value">
+                    <input type="checkbox" id="hindawi_value" name="hindawi_value" value="true">Hindawi
+                </label>
+                <label class="label" for="sciendo_value">
+                    <input type="checkbox" id="sciendo_value" name="sciendo_value" value="true">Sciendo
+                </label>
+            </div>
+        </form>
     </div>
-
-    <footer class="footer mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12 text-center">
-                    <h1>bOOk app</h1>
-                    <p>Home</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="{{ url_for('static', filename='js/index.js' )}}"></script>
 </body>
 </html>

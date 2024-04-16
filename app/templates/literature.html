@@ -1,22 +1,47 @@
-<article class="postcard light blue">
-    <a class="postcard__img_link" href="#">
-        <img class="postcard__img" src="https://picsum.photos/1000/1000" alt="Image Title" />
-    </a>
-    <div class="postcard__text t-dark">
-        <h1 class="postcard__title blue"><a href="#">Podcast Title</a></h1>
-        <div class="postcard__subtitle small">
-            <time datetime="2020-05-25 12:00:00">
-                <i class="fas fa-calendar-alt mr-2"></i>Mon, May 25th 2020
-            </time>
-        </div>
-        <div class="postcard__bar"></div>
-        <div class="postcard__preview-txt">Lorem ipsum dolor sit amet consectetur adipisicing elit. Eligendi, fugiat asperiores inventore beatae accusamus odit minima enim, commodi quia, doloribus eius! Ducimus nemo accusantium maiores velit corrupti tempora reiciendis molestiae repellat vero. Eveniet ipsam adipisci illo iusto quibusdam, sunt neque nulla unde ipsum dolores nobis enim quidem excepturi, illum quos!</div>
-        <ul class="postcard__tagbox">
-            <li class="tag__item"><i class="fas fa-tag mr-2"></i>Podcast</li>
-            <li class="tag__item"><i class="fas fa-clock mr-2"></i>55 mins.</li>
-            <li class="tag__item play blue">
-                <a href="#"><i class="fas fa-play mr-2"></i>Play Episode</a>
-            </li>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webscrapnito</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+</head>
+<body>
+{% for item in links %}
+    <div class="card">
+    <img src="{{ item.image }}" alt="Card Image">
+    <div class="card-title">{{ item.article_title }}</div>
+    <div class="card-description">{{ item.description }}</div>
+    <div class="card-date">{{ item.date }}</div>
+    <div class="card-authors">
+        <strong>Authors:</strong>
+        <ul>
+            {% for author in item.authors %}
+            <li>{{ author.name }}</li>
+            {% endfor %}
         </ul>
     </div>
-</article>
+    <div class="card-keywords">
+        <strong>Keywords:</strong>
+        <ul>
+            {% for keyword in item.keywords %}
+            <li>{{ keyword.word }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="card-citations">
+        <strong>Citations:</strong>
+        <ul>
+            {% for citation in item.citations %}
+            <li>{{ citation.reference }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endfor %}
+<script src="{{ url_for('static', filename='js/index.js' )}}"></script>
+</body>
+</html>

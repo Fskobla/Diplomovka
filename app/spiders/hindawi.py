@@ -18,13 +18,18 @@ class Hindawi:
 
         if response.status_code == 200:
             html_content = BeautifulSoup(response.content, features='html.parser')
-            last_page = html_content.find_all("li", class_="ant-pagination-item")[-1].text
+            try:
+                last_page = html_content.find_all("li", class_="ant-pagination-item")[-1].text
+            except:
+                last_page = 0
             return last_page
 
     def get_links(self):
         links = []
         last_page = int(self.get_last_page())
         print(f"Last page:{last_page}")
+        if last_page == 0:
+            return 0
 
         for page_number in range(1, last_page + 1):
             print(page_number)
@@ -49,6 +54,9 @@ class Hindawi:
     def scrape_links(self):
         bad_links = 0
         links = self.get_links()
+
+        if links == 0:
+            return
 
         for i in range(10):
             response = requests.get(links[i], proxies={
