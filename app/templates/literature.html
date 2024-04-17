@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webscrapnito</title>
+    <title>WebscrapniTo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
@@ -11,6 +11,7 @@
 </head>
 <body>
 {% for item in links %}
+    <p>{{ links|length }}</p>
     <div class="card">
     <img src="{{ item.image }}" alt="Card Image">
     <div class="card-title">{{ item.article_title }}</div>
