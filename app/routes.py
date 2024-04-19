@@ -42,6 +42,12 @@ def init_app_routes(app):
         word = request.args.get('word')
         if word:
             links = Links.query.filter_by(word=word).all()
+            if len(links) == 0:
+                abort(404)
+            return render_template('literature.html', links=links)
         else:
             abort(404)
-        return render_template('literature.html', links=links)
+
+    @app.errorhandler(404)
+    def page_not_found(error):
+        return render_template('page_404.html', title='404'), 404

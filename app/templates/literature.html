@@ -16,8 +16,13 @@
                 <img id="logo" src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo">
             </div>
         </div>
-        <div class="functionality-navigation">
-            <a class="home-icon" href="{{ url_for('index') }}"><span id="home-icon" class="material-symbols-outlined">arrow_back</span></a>
+        <div class="functionality">
+            <div class="functionality-navigation">
+                <a class="home-icon" href="{{ url_for('index') }}"><span id="home-icon" class="material-symbols-outlined">arrow_back</span></a>
+            </div>
+            <div class="search-informations-result">
+                <h3 class="total-results">Total results: <span>{{ links|length }}</span></h3>
+            </div>
         </div>
         <div class="card-container">
         {% for item in links %}
@@ -32,16 +37,45 @@
              <div class="right">
                 <h2 class="article-title">{{ item.article_title }}</h2>
                 <div class="article-link-text">
-                    <span class="article-link-title">Link: </span><a class="article-link" href="{{ item.link }}" class="article-link">{{ item.link }}</a>
+                    <span class="material-symbols-outlined">link</span>
+                    <a class="article-link" href="{{ item.link }}" class="article-link">{{ item.link }}</a>
                 </div>
                 <div class="date-text">
-                    <span class="date-published">Published:</span><p class="date">{{ item.date }}</p>
+                    <span class="material-symbols-outlined">date_range</span>
+                    <p class="date">{{ item.date }}</p>
                 </div>
                 <ul class="authors-list">
                     {% for author in item.authors %}
+                    <span class="material-symbols-outlined">person</span>
                     <li class="author-item">{{ author.name }}</li>
                     {% endfor %}
                 </ul>
+                <div class="description-container">
+                    <span class="material-symbols-outlined">description</span>
+                    <h3 class="description-title">Description</h3>
+                    <p class="description-content">{{ item.description }}</p>
+                </div>
+                <div class="keywords-container">
+                    <span class="material-symbols-outlined">key</span>
+                    <h3 class="keywords-title">Keywords</h3>
+                    <ul class="keywords-list">
+                        {% for keyword in item.keywords %}
+                            {% if not loop.last %}
+                                <li class="keyword-item">{{ keyword.word }},</li>
+                            {% endif %}
+                            <li class="keyword-item">{{ keyword.word }} </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="citations-container">
+                    <span class="material-symbols-outlined">format_quote</span>
+                    <h3 class="citations-title">Citations</h3>
+                    <ul class="citations-list">
+                        {% for citation in item.citations %}
+                            <li class="citation-item">{{ citation.reference }} </li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         </div>
         {% endfor %}

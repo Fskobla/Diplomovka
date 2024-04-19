@@ -147,6 +147,12 @@
     transform: scale(1.1);
 }
 
+.search-informations-result{
+    display: flex;
+    width: 60%;
+    margin: auto;
+}
+
 /* LITERATURE CARD */
 .card-container {
     display: flex;
@@ -179,8 +185,9 @@
 
 .article-image {
     width: 50%;
+    max-height: 300px;
     object-fit: cover;
-    margin: auto;
+    margin: 20px auto;
 }
 
 .article-title {
@@ -217,6 +224,18 @@
     text-decoration: underline;
 }
 
+.article-link-text{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.article-link{
+    margin-left: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    color: black;
+}
+
 .date-text{
     display: flex;
 }
@@ -226,8 +245,97 @@
 }
 
 .date {
-    margin-left: 10px;
-    font-size: 14px;
+    margin-left: 5px;
+    font-size: 16px;
     font-weight: bold;
     color: black;
+}
+
+/* DESCRIPTION */
+.description-container{
+    display: flex;
+    flex-wrap: wrap;
+    cursor: pointer;
+}
+
+.description-content{
+    display: none;
+    margin-left: 5px;
+    transition: opacity 0.5s ease;
+}
+
+.description-title{
+    margin-left: 5px;
+}
+
+/* KEYWORDS */
+.keywords-container{
+    display: flex;
+    flex-wrap: wrap;
+    cursor: pointer;
+}
+
+.keywords-title{
+    margin-left: 5px;
+}
+
+.keywords-list{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: none;
+}
+
+.keywords-list.show {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.keyword-item{
+    margin-left: 5px;
+}
+
+/* CITATIONS */
+.citations-container{
+    display: flex;
+    flex-wrap: wrap;
+    cursor: pointer;
+}
+
+.citations-title {
+    margin-left: 5px;
+}
+
+.citations-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: none;
+}
+
+.citations-list.show {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.citation-item{
+    margin-left: 5px;
+}
+
+@media (max-width: 1200px) {
+    .card {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .left, .right {
+        flex: 1;
+        width: 100%;
+        text-align: center;
+    }
+
+    .article-image {
+        width: 50%; /* Adjust image width as needed */
+        margin-bottom: 20px; /* Add some space between image and text */
+    }
 }
