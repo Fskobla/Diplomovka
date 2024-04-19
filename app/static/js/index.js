@@ -2,7 +2,8 @@ var inputWord = document.getElementById('search_word');
 var searchCloseButton = document.getElementById('search-close')
 var searchIconButton = document.getElementById('search-icon-button')
 var searchIconOptions = document.getElementById('search-icon-options')
-var searchOptions = document.querySelector('.search-bar-options')
+var searchOptions = document.querySelector('.search-bar-options');
+searchOptions.style.visibility = 'hidden';
 
 inputWord.addEventListener('input', function (){
    if(inputWord.value.trim() !== ''){

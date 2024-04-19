@@ -6,7 +6,10 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'Poppins', sans-serif;
-    background: lightgray;
+}
+
+.wrapper{
+    background: lightgoldenrodyellow;
 }
 
 .flex-container {
@@ -81,7 +84,6 @@
     align-items: center;
     justify-content: center;
     margin-top: 20px;
-    visibility: hidden;
 }
 
 #search-close{
@@ -109,36 +111,123 @@
         transform: scale(0.5);
     }
 }
+/* QUOTES*/
+.quote-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-/* CARD */
+/* LITERATURE */
+.logo-literature-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* LITERATURE ICONS NAVIGATION */
+.functionality-navigation{
+    width: 70%;
+    margin: auto;
+    display: flex;
+    justify-content: end;
+    align-items: end;
+}
+
+#home-icon{
+    font-size: 3em;
+}
+
+.home-icon:link, .home-icon:visited, .home-icon:active {
+    color: black;
+    text-decoration: none;
+}
+
+.home-icon:hover{
+    transform: scale(1.1);
+}
+
+/* LITERATURE CARD */
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
 .card {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
+    width: 70%;
+    display: flex;
+    margin: 20px;
+    border: 5px solid #ddd;
+    border-radius: 28px;
+    overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
+}
 
-  .card img {
-    width: 100%;
-    border-radius: 8px;
-    margin-bottom: 10px;
-  }
+.left {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-  .card-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
+.right {
+    flex: 2;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
 
-  .card-description {
+.article-image {
+    width: 50%;
+    object-fit: cover;
+    margin: auto;
+}
+
+.article-title {
+    margin-top: 0;
+}
+
+.article-link:visited, .article-link:active, .article-link:link {
+    text-decoration: none;
+    color: black;
+}
+
+.authors-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.author-item {
+    margin-right: 10px;
+}
+
+.author-item:last-child {
+    margin-right: 0;
+}
+
+.author-link {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.author-link:hover {
+    text-decoration: underline;
+}
+
+.date-text{
+    display: flex;
+}
+
+.date-published{
+
+}
+
+.date {
+    margin-left: 10px;
     font-size: 14px;
-    color: #666;
-    margin-bottom: 10px;
-  }
-
-  .card-date {
-    font-size: 12px;
-    color: #999;
-  }
-
+    font-weight: bold;
+    color: black;
+}

@@ -10,39 +10,43 @@
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
 </head>
 <body>
-{% for item in links %}
-    <p>{{ links|length }}</p>
-    <div class="card">
-    <img src="{{ item.image }}" alt="Card Image">
-    <div class="card-title">{{ item.article_title }}</div>
-    <div class="card-description">{{ item.description }}</div>
-    <div class="card-date">{{ item.date }}</div>
-    <div class="card-authors">
-        <strong>Authors:</strong>
-        <ul>
-            {% for author in item.authors %}
-            <li>{{ author.name }}</li>
-            {% endfor %}
-        </ul>
+    <div class="wrapper">
+        <div class="logo-literature-container">
+            <div class="logo">
+                <img id="logo" src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo">
+            </div>
+        </div>
+        <div class="functionality-navigation">
+            <a class="home-icon" href="{{ url_for('index') }}"><span id="home-icon" class="material-symbols-outlined">arrow_back</span></a>
+        </div>
+        <div class="card-container">
+        {% for item in links %}
+        <div class="card" style="background-color: lavender">
+            <div class="left">
+                {% if item.image != '' %}
+                <img class="article-image" src="{{ item.image }}" alt="Image">
+                {% else %}
+                <img class="article-image" src="{{ url_for('static', filename='images/no-image.png') }}" alt="Logo">
+                {% endif %}
+            </div>
+             <div class="right">
+                <h2 class="article-title">{{ item.article_title }}</h2>
+                <div class="article-link-text">
+                    <span class="article-link-title">Link: </span><a class="article-link" href="{{ item.link }}" class="article-link">{{ item.link }}</a>
+                </div>
+                <div class="date-text">
+                    <span class="date-published">Published:</span><p class="date">{{ item.date }}</p>
+                </div>
+                <ul class="authors-list">
+                    {% for author in item.authors %}
+                    <li class="author-item">{{ author.name }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
     </div>
-    <div class="card-keywords">
-        <strong>Keywords:</strong>
-        <ul>
-            {% for keyword in item.keywords %}
-            <li>{{ keyword.word }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    <div class="card-citations">
-        <strong>Citations:</strong>
-        <ul>
-            {% for citation in item.citations %}
-            <li>{{ citation.reference }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-</div>
-{% endfor %}
-<script src="{{ url_for('static', filename='js/index.js' )}}"></script>
+   </div>
+<script src="{{ url_for('static', filename='js/literature.js' )}}"></script>
 </body>
 </html>
