@@ -173,7 +173,6 @@ function renderCards(cards) {
 
 /// DOWNLOAD ICON
 document.getElementById('download-icon').addEventListener('click', function() {
-    // Get the data from the HTML
     const links = [];
     document.querySelectorAll('.card').forEach(card => {
         const linkData = {
@@ -188,13 +187,10 @@ document.getElementById('download-icon').addEventListener('click', function() {
         links.push(linkData);
     });
 
-    // Convert the data to JSON
     const jsonData = JSON.stringify(links, null, 2);
 
-    // Create a blob with the JSON data
     const blob = new Blob([jsonData], { type: 'application/json' });
 
-    // Create a link element and trigger the download
     const a = document.createElement('a');
     const url = URL.createObjectURL(blob);
     a.href = url;
