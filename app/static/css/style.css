@@ -265,7 +265,16 @@
 .description-content{
     display: none;
     margin-left: 5px;
-    transition: opacity 0.5s ease;
+}
+
+.description-content.show {
+    display: block;
+    transition: ease-in 1.5s;
+}
+
+.description-content.hide {
+    display: none;
+    transition: ease-out 1.5s;
 }
 
 .description-title{
@@ -429,6 +438,10 @@
 
 .selected-value-dropdown li:last-child{
     padding-bottom: 0;
+}
+
+.close-icon-button-dropdown{
+    visibility: hidden;
 }
 
 @media (max-width: 1200px) {

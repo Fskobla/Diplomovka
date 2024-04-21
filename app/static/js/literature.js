@@ -3,12 +3,12 @@ const descriptionContainers = document.querySelectorAll('.description-container'
 descriptionContainers.forEach(container => {
     container.addEventListener('click', () => {
         const content = container.querySelector('.description-content');
-        if (content.style.display === 'none' || content.style.display === '') {
-            content.style.display = 'block';
-            content.style.transition = 'ease-in 0.5s';
+        if (content.classList.contains('show')) {
+            content.classList.remove('show');
+            content.classList.add('hide');
         } else {
-            content.style.display = 'none';
-            content.style.transition = 'ease-out 0.5s';
+            content.classList.remove('hide');
+            content.classList.add('show');
         }
     });
 });
@@ -45,11 +45,41 @@ $(document).ready(function(){
         var text = $(this).text();
         $(".default-option-selected").text(text);
         $(".selected-value-dropdown").removeClass("active");
+        updatePlaceholder(text);
+        filterCards();
     });
+
     $("#search-icon-button-dropdown").click(function () {
         filterCards();
     });
+    $(".search-input-dropdown").keypress(function(event) {
+        if (event.which === 13) {
+            filterCards();
+        }
+    });
 });
+
+function updatePlaceholder(text){
+    var placeholderText = "Enter ";
+    switch(text.toLowerCase()) {
+        case 'title':
+            placeholderText += "title";
+            break;
+        case 'author':
+            placeholderText += "author";
+            break;
+        case 'keyword':
+            placeholderText += "keyword";
+            break;
+        case 'year':
+            placeholderText += "year";
+            break;
+        default:
+            placeholderText += "word";
+    }
+    $(".search-input-dropdown").attr("placeholder", placeholderText);
+}
+
 
 function filterCards() {
     var input, filter, cards, card, i;
@@ -62,9 +92,9 @@ function filterCards() {
         card = cards[i];
         var isVisible = false;
         switch(selectedOption) {
-            case 'title':
-                isVisible = card.querySelector(".article-title").innerText.toUpperCase().indexOf(filter) > -1;
-                break;
+                case 'title':
+                    isVisible = card.querySelector(".article-title").innerText.toUpperCase().indexOf(filter) > -1;
+                    break;
                 case 'author':
                     isVisible = card.querySelector(".author-item").innerText.toUpperCase().indexOf(filter) > -1;
                     break;
@@ -75,6 +105,9 @@ function filterCards() {
                             isVisible = true;
                         }
                     });
+                    break;
+                case 'year':
+                    isVisible = card.querySelector(".date").innerText.toUpperCase().indexOf(filter) > -1;
                     break;
                 default:
                     isVisible = true;
@@ -88,4 +121,19 @@ function filterCards() {
         }
         $(".total-results").text("Total results: " + totalResults);
     }
+/// SEARCH ICON CLOSE
+var searchCloseButton = document.getElementById('close-icon-button-dropdown');
+var inputWord = document.getElementById('search_option');
 
+inputWord.addEventListener('input', function (){
+   if(inputWord.value.trim() !== ''){
+       searchCloseButton.style.visibility = 'visible';
+   } else{
+       searchCloseButton.style.visibility = "hidden";
+   }
+});
+
+searchCloseButton.addEventListener('click', function (){
+    inputWord.value = '';
+    searchCloseButton.style.visibility = "hidden";
+});

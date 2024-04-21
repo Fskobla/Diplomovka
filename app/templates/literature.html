@@ -42,15 +42,15 @@
                 </ul>
             </div>
             <span id="search-icon-button-dropdown" type="submit" class="search-icon-dropdown material-symbols-outlined">search</span>
-            <input class="search-input-dropdown" id="search_word" name="search_word" type="search" placeholder="Enter word">
-            <span id="search-close-dropdown" class="search-icon-dropdown material-symbols-outlined">close</span>
+            <input class="search-input-dropdown" id="search_option" name="search_option" type="search" placeholder="Enter title">
+            <span id="close-icon-button-dropdown" type="submit" class="close-icon-dropdown material-symbols-outlined">close</span>
         </div>
         <div class="functionality">
             <div class="functionality-navigation">
                 <a class="home-icon" href="{{ url_for('index') }}"><span id="home-icon" class="material-symbols-outlined">arrow_back</span></a>
             </div>
             <div class="search-informations-result">
-                <h3 class="total-results"></h3>
+                <h3 class="total-results">Total results: {{ links|length }}</h3>
             </div>
         </div>
         <div class="card-container">
