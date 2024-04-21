@@ -123,10 +123,10 @@ function filterCards() {
     }
 /// SEARCH ICON CLOSE
 var searchCloseButton = document.getElementById('close-icon-button-dropdown');
-var inputWord = document.getElementById('search_option');
+var inputWordOption = document.getElementById('search_option');
 
-inputWord.addEventListener('input', function (){
-   if(inputWord.value.trim() !== ''){
+inputWordOption.addEventListener('input', function (){
+   if(inputWordOption.value.trim() !== ''){
        searchCloseButton.style.visibility = 'visible';
    } else{
        searchCloseButton.style.visibility = "hidden";
@@ -134,6 +134,73 @@ inputWord.addEventListener('input', function (){
 });
 
 searchCloseButton.addEventListener('click', function (){
-    inputWord.value = '';
+    inputWordOption.value = '';
     searchCloseButton.style.visibility = "hidden";
+});
+
+/// SORT ICONS
+document.getElementById('sortAsc').addEventListener('click', sortAsc);
+document.getElementById('sortDesc').addEventListener('click', sortDesc);
+
+function sortAsc() {
+    const cardsContainer = document.querySelector('.card-container');
+    const cards = Array.from(cardsContainer.querySelectorAll('.card'));
+    cards.sort((a, b) => {
+        const titleA = a.querySelector('.article-title').innerText.toLowerCase();
+        const titleB = b.querySelector('.article-title').innerText.toLowerCase();
+        return titleA.localeCompare(titleB);
+    });
+    renderCards(cards);
+}
+
+function sortDesc() {
+    const cardsContainer = document.querySelector('.card-container');
+    const cards = Array.from(cardsContainer.querySelectorAll('.card'));
+    cards.sort((a, b) => {
+        const titleA = a.querySelector('.article-title').innerText.toLowerCase();
+        const titleB = b.querySelector('.article-title').innerText.toLowerCase();
+        return titleB.localeCompare(titleA);
+    });
+    renderCards(cards);
+}
+
+function renderCards(cards) {
+    const cardsContainer = document.querySelector('.card-container');
+    cards.forEach(card => {
+        cardsContainer.appendChild(card);
+    });
+}
+
+/// DOWNLOAD ICON
+document.getElementById('download-icon').addEventListener('click', function() {
+    // Get the data from the HTML
+    const links = [];
+    document.querySelectorAll('.card').forEach(card => {
+        const linkData = {
+            article_title: card.querySelector('.article-title').innerText,
+            link: card.querySelector('.article-link').getAttribute('href'),
+            date: card.querySelector('.date').innerText,
+            authors: Array.from(card.querySelectorAll('.author-item')).map(author => author.innerText),
+            description: card.querySelector('.description-content').innerText,
+            keywords: Array.from(card.querySelectorAll('.keyword-item')).map(keyword => keyword.innerText),
+            citations: Array.from(card.querySelectorAll('.citation-item')).map(citation => citation.innerText)
+        };
+        links.push(linkData);
+    });
+
+    // Convert the data to JSON
+    const jsonData = JSON.stringify(links, null, 2);
+
+    // Create a blob with the JSON data
+    const blob = new Blob([jsonData], { type: 'application/json' });
+
+    // Create a link element and trigger the download
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = 'articles.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 });

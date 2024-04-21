@@ -47,10 +47,15 @@
         </div>
         <div class="functionality">
             <div class="functionality-navigation">
-                <a class="home-icon" href="{{ url_for('index') }}"><span id="home-icon" class="material-symbols-outlined">arrow_back</span></a>
+                <a class="home-icon" href="{{ url_for('index') }}"><span id="home-icon" class="material-symbols-outlined" title="Back home">arrow_back</span></a>
             </div>
             <div class="search-informations-result">
                 <h3 class="total-results">Total results: {{ links|length }}</h3>
+            </div>
+            <div class="sort-icons">
+                <span class="sort-icon" id="download-icon" title="Download JSON"><i class="fa-solid fa-download"></i></span>
+                <span class="sort-icon" id="sortAsc" title="Sort A-Z"><i class="fa-solid fa-arrow-down-a-z"></i></span>
+                <span class="sort-icon" id="sortDesc" title="Sort Z-A"><i class="fa-solid fa-arrow-up-a-z"></i></span>
             </div>
         </div>
         <div class="card-container">
