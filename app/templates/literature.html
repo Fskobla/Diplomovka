@@ -6,22 +6,51 @@
     <title>WebscrapniTo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://kit.fontawesome.com/2daf9707fb.js" crossorigin="anonymous"></script>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <script>
+        $(document).ready(function(){
+			$(".default-option-selected").click(function(){
+			  $(".selected-value-dropdown").addClass("active");
+			});
+
+			$(".selected-value-dropdown li").click(function(){
+			  var text = $(this).text();
+			  $(".default-option-selected").text(text);
+			  $(".selected-value-dropdown").removeClass("active");
+			});
+		});
+    </script>
 </head>
-<body>
+<body style="background: lightgoldenrodyellow">
     <div class="wrapper">
         <div class="logo-literature-container">
             <div class="logo">
                 <img id="logo" src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo">
             </div>
         </div>
+        <div class="search-bar-dropdown">
+            <div class="search-selection-dropdown">
+                <div class="default-option-selected">Title</div>
+                <ul class="selected-value-dropdown">
+                    <li class="title-selected" value="title-selected">Title</li>
+                    <li class="author-selected" value="author-selected">Author</li>
+                    <li class="keyword-selected" value="keyword-selected">Keyword</li>
+                    <li class="date-selected" value="date-selected">Year</li>
+                </ul>
+            </div>
+            <span id="search-icon-button-dropdown" type="submit" class="search-icon-dropdown material-symbols-outlined">search</span>
+            <input class="search-input-dropdown" id="search_word" name="search_word" type="search" placeholder="Enter word">
+            <span id="search-close-dropdown" class="search-icon-dropdown material-symbols-outlined">close</span>
+        </div>
         <div class="functionality">
             <div class="functionality-navigation">
                 <a class="home-icon" href="{{ url_for('index') }}"><span id="home-icon" class="material-symbols-outlined">arrow_back</span></a>
             </div>
             <div class="search-informations-result">
-                <h3 class="total-results">Total results: <span>{{ links|length }}</span></h3>
+                <h3 class="total-results"></h3>
             </div>
         </div>
         <div class="card-container">

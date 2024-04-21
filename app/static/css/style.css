@@ -149,6 +149,7 @@
 
 .search-informations-result{
     display: flex;
+    flex-wrap: wrap;
     width: 60%;
     margin: auto;
 }
@@ -167,6 +168,9 @@
     border-radius: 28px;
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.card:first-child{
+    margin-top: 0;
 }
 
 .left {
@@ -322,6 +326,111 @@
     margin-left: 5px;
 }
 
+/* SEARCH BAR DROPDOWN*/
+/* SEARCH */
+.search-bar-dropdown{
+    --padding: 14px;
+    width: max-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--padding);
+    border-radius: 28px;
+    border: 1px solid black;
+    background: #f6f6f6;
+    transition: box-shadow 0.25s;
+    margin: auto;
+}
+
+.search-bar-dropdown:focus-within{
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.75);
+}
+
+.search-input-dropdown{
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+    color: #333333;
+    margin-left: var(--padding);
+    outline: none;
+    border: black;
+    background: transparent;
+    width: 300px;
+}
+
+.search-icon-dropdown{
+    cursor:pointer;
+    background: #f6f6f6;
+}
+
+.search-icon-dropdown:hover{
+    transform: scale(1.1);
+}
+
+.search-bar-options-dropdown{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+#search-close-dropdown{
+    visibility: hidden;
+}
+
+.label-dropdown{
+    margin-left: 10px;
+    accent-color: red;
+}
+
+.search-selection-dropdown{
+    width: 100px;
+    margin-right: 5px;
+    border-right: 2px solid #dde2f1;
+    color: #9fa3b1;
+    position: relative;
+    cursor: pointer;
+    text-align: center;
+}
+
+.selected-value-dropdown{
+    position: absolute;
+    top: 50px;
+    left: -10px;
+    background: #fff;
+    width: 150px;
+    border-radius: 5px;
+    padding: 20px;
+    display: none;
+    box-shadow: 8px 8px 6px -10px #b3c6ff;
+    list-style: none;
+}
+
+
+.default_option-selected {
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    padding: 13px 15px;
+    font-size: 14px;
+}
+
+.selected-value-dropdown.active{
+    display: block;
+}
+
+.selected-value-dropdown li{
+    padding-bottom: 20px;
+    text-align: center;
+}
+
+.selected-value-dropdown li:hover{
+    color: #6f768d;
+}
+
+.selected-value-dropdown li:last-child{
+    padding-bottom: 0;
+}
+
 @media (max-width: 1200px) {
     .card {
         flex-direction: column;
@@ -337,5 +446,14 @@
     .article-image {
         width: 50%; /* Adjust image width as needed */
         margin-bottom: 20px; /* Add some space between image and text */
+    }
+}
+
+@media (max-width: 500px){
+    #logo{
+        width: 350px;
+    }
+    .search-bar-dropdown{
+        width: 300px;
     }
 }
