@@ -58,7 +58,7 @@ class Hindawi:
         if links == 0:
             return
 
-        for i in range(10):
+        for i in range(len(links)):
             response = requests.get(links[i], proxies={
                             "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
                             "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"

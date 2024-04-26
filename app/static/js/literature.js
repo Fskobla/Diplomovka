@@ -200,3 +200,10 @@ document.getElementById('download-icon').addEventListener('click', function() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 });
+
+$(document).ready(function() {
+        $("#graph-icon").click(function() {
+            var word = document.getElementById('dynamic-word');  // Get the word from the template
+            window.location.href = "/graph?word=" + word.innerText;
+        });
+    });

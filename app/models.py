@@ -10,9 +10,9 @@ class Links(db.Model):
     article_title = db.Column(db.Text())
     image = db.Column(db.Text())
     date = db.Column(db.String(30))
-    authors = db.relationship('Authors', backref='author', lazy=True)
-    keywords = db.relationship('Keywords', backref='keyword', lazy=True)
-    citations = db.relationship('Citations', backref='citation', lazy=True)
+    authors = db.relationship('Authors', secondary='link_authors', lazy=True, backref=db.backref('links', lazy=True))
+    keywords = db.relationship('Keywords', secondary='link_keywords', lazy=True, backref=db.backref('links', lazy=True))
+    citations = db.relationship('Citations', backref='link', lazy=True)
 
     def __repr__(self):
         return f'Link: {self.link}'
@@ -30,6 +30,17 @@ class Links(db.Model):
             'keywords': [keyword.to_dict() for keyword in self.keywords],
             'citations': [citation.to_dict() for citation in self.citations]
         }
+
+
+link_authors = db.Table('link_authors',
+                        db.Column('link_id', db.Integer, db.ForeignKey('links.id'), primary_key=True),
+                        db.Column('author_id', db.Integer, db.ForeignKey('authors.id'), primary_key=True)
+                        )
+
+link_keywords = db.Table('link_keywords',
+                         db.Column('link_id', db.Integer, db.ForeignKey('links.id'), primary_key=True),
+                         db.Column('keyword_id', db.Integer, db.ForeignKey('keywords.id'), primary_key=True)
+                         )
 
 
 class Keywords(db.Model):
