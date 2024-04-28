@@ -1,9 +1,15 @@
 import json
+import time
 
 import requests
 from bs4 import BeautifulSoup
+import psycopg2.errors
+from sqlalchemy.exc import IntegrityError
+
 from app import db
-from app.models import Links, Authors, Citations, Keywords
+from app.models import Links, Authors, Citations, Keywords, BadLinks
+from app.spiders.utils.bad_links_exception import BadLinkException
+from app.spiders.utils.database_operations import remove_links_from_database, remove_bad_links_from_database
 
 
 class Sciendo:
@@ -49,7 +55,6 @@ class Sciendo:
 
     def scrape_links(self):
         links = self.get_links()
-
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
             'Accept': 'application/json, text/plain, */*',
@@ -62,48 +67,105 @@ class Sciendo:
             'Sec-Fetch-Site': 'same-site',
         }
 
-        for i in range(10):
+        for i in range(len(links)):
             response = requests.get(links[i], headers=headers)
-            print(response.encoding)
+            time.sleep(0.4)
 
             if response.status_code == 200:
                 page = BeautifulSoup(response.content, features='html.parser')
                 try:
-                    data = json.loads(
-                        page.find('script', id="__NEXT_DATA__", type='application/json').text.encode('utf-8'))
+                    data = json.loads(page.find('script', id="__NEXT_DATA__", type='application/json').text.encode('utf-8', 'ignore'))
 
-                    link = response.url
-                    description = data['props']['pageProps']['product']['longDescription']
-                    article_title = data['props']['pageProps']['product']['articleData']['articleTitle']
-                    authors = get_authors(
-                        data['props']['pageProps']['product']['articleData']['contribGroup']['contrib'])
+                    # Link
+                    try:
+                        link = response.url
+                    except (psycopg2.errors.UniqueViolation, UnicodeEncodeError):
+                        raise BadLinkException("Link url problematic encoding")
+
+                    # Image if exists
                     image = data['props']['pageProps']['product']['coverUrl']
-                    date = data['props']['pageProps']['product']['articleData']['publishedDate']
 
-                    if data['props']['pageProps']['product']['articleData']['keywords'] is not None:
+                    # Published date
+                    try:
+                        date = data['props']['pageProps']['product']['articleData']['publishedDate']
+                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
+                        raise BadLinkException("Published date is missing")
+
+                    # Description
+                    try:
+                        description = data['props']['pageProps']['product']['longDescription']
+                        if isinstance(description, list):
+                            description = [d.encode('utf-8', 'ignore').decode('utf-8', 'ignore') for d in description]
+                        else:
+                            description = description.encode('utf-8', 'ignore').decode('utf-8', 'ignore')
+                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
+                        raise BadLinkException("Description missing")
+
+                    # Article_title
+                    try:
+                        article_title = data['props']['pageProps']['product']['articleData']['articleTitle']
+                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
+                        raise BadLinkException("Article title missing")
+
+                    # Authors
+                    try:
+                        authors = get_authors(
+                            data['props']['pageProps']['product']['articleData']['contribGroup']['contrib'])
+                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
+                        raise BadLinkException("Authors missing")
+
+                    # Keywords
+                    try:
                         keywords = data['props']['pageProps']['product']['articleData']['keywords']
-                    else:
-                        keywords = []
+                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
+                        raise BadLinkException("Keywords missing")
 
-                    if data['props']['pageProps']['product']['articleData']['referenceList'] is not None:
+                    # Citations
+                    try:
                         citations = get_citations(data['props']['pageProps']['product']['articleData']['referenceList'])
-                    else:
-                        citations = []
+                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
+                        raise BadLinkException("Citations missing")
 
                     db_citations = [Citations(reference=citation) for citation in citations]
-                    db_keywords = [Keywords(word=keyword) for keyword in keywords]
-                    db_authors = [Authors(name=name) for name in authors]
-                    db_links = Links(link=link, word=self.word, description=description, article_title=article_title,
-                                     image=image, date=date, authors=db_authors, keywords=db_keywords,
-                                     citations=db_citations)
+                    db_links = Links(link=link, word=self.word, source='Sciendo', description=description, article_title=article_title,
+                                     image=image, date=date)
                     db.session.add(db_links)
                     db.session.commit()
-                except:
+
+                    db_keywords = [Keywords(word=keyword) for keyword in keywords]
+                    db_authors = [Authors(name=name) for name in authors]
+
+                    db_links.authors = db_authors
+                    db_links.keywords = db_keywords
+                    db_links.citations = db_citations
+                    db.session.add(db_links)
+                    db.session.commit()
+                    print(response.url)
+                except BadLinkException as e:
+                    print(e)
                     db.session.rollback()
-                finally:
-                    db.session.close()
+                    db_bad_links = BadLinks(word=self.word, reason=str(e),
+                                            bad_link=response.url, source='Sciendo')
+                    db.session.add(db_bad_links)
+                    db.session.commit()
+                except (psycopg2.errors.UniqueViolation, IntegrityError) as e:
+                    print(e)
+                    db.session.rollback()
+                    db_bad_links = BadLinks(word=self.word,
+                                            reason="Already in database",
+                                            bad_link=response.url, source='Sciendo')
+                    db.session.add(db_bad_links)
+                    db.session.commit()
+            else:
+                db_bad_links = BadLinks(word=self.word,
+                                        reason=f"Response code {response.status_code}", bad_link=response.url,
+                                        source='Sciendo')
+                db.session.add(db_bad_links)
+                db.session.commit()
+                db.session.close()
 
 
+# Parser function for authors
 def get_authors(authors_json):
     authors = []
 
@@ -113,6 +175,7 @@ def get_authors(authors_json):
     return authors
 
 
+# Parser function for citations
 def get_citations(citations_json):
     citations = []
 

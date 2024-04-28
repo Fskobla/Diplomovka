@@ -207,3 +207,58 @@ $(document).ready(function() {
             window.location.href = "/graph?word=" + word.innerText;
         });
     });
+
+$(document).ready(function() {
+        $("#top-results-icon").click(function() {
+            var word = document.getElementById('dynamic-word');  // Get the word from the template
+            window.location.href = "/top_results?word=" + word.innerText;
+        });
+    });
+
+// Get the modal element
+var modal = document.getElementById("badLinksModal");
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+    modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+
+// When the user clicks the button, open the modal and fetch bad links
+document.getElementById("bad-links-icon").onclick = function() {
+    modal.style.display = "block";
+    fetchBadLinks();
+}
+
+// Function to fetch bad links and populate the table
+function fetchBadLinks() {
+    var word = document.getElementById("dynamic-word").textContent;
+    fetch(`/get_bad_links_by_word?word=${word}`)
+        .then(response => response.json())
+        .then(data => {
+            var tableBody = document.querySelector('#bad-links-table tbody');
+            tableBody.innerHTML = '';
+            data.forEach(link => {
+                var row = `
+                    <tr>
+                        <td>${link.source}</td>
+                        <td>${link.bad_link}</td>
+                        <td>${link.reason}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching bad links:', error);
+        });
+}

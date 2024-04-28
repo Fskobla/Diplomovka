@@ -9,9 +9,10 @@ class Links(db.Model):
     description = db.Column(db.Text())
     article_title = db.Column(db.Text())
     image = db.Column(db.Text())
+    source = db.Column(db.String(20))
     date = db.Column(db.String(30))
-    authors = db.relationship('Authors', secondary='link_authors', lazy=True, backref=db.backref('links', lazy=True))
-    keywords = db.relationship('Keywords', secondary='link_keywords', lazy=True, backref=db.backref('links', lazy=True))
+    authors = db.relationship('Authors', secondary='link_authors', lazy=True, backref=db.backref('link', lazy=True))
+    keywords = db.relationship('Keywords', secondary='link_keywords', lazy=True, backref=db.backref('link', lazy=True))
     citations = db.relationship('Citations', backref='link', lazy=True)
 
     def __repr__(self):
@@ -25,6 +26,7 @@ class Links(db.Model):
             'description': self.description,
             'article_title': self.article_title,
             'image': self.image,
+            'source': self.source,
             'date': self.date,
             'authors': [author.to_dict() for author in self.authors],
             'keywords': [keyword.to_dict() for keyword in self.keywords],
@@ -58,6 +60,15 @@ class Keywords(db.Model):
             'link_id': self.link_id,
             'word': self.word
         }
+
+
+class BadLinks(db.Model):
+    __tablename__ = "bad_links"
+    id = db.Column(db.Integer, primary_key=True)
+    bad_link = db.Column(db.Text(), nullable=False)
+    source = db.Column(db.String(20))
+    word = db.Column(db.String(30), nullable=False)
+    reason = db.Column(db.Text())
 
 
 class Citations(db.Model):

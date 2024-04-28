@@ -51,13 +51,33 @@
             </div>
             <div class="search-informations-result">
                 <h3 class="total-results">Total results: {{ links|length }}</h3>
-                <h3> for <span id="dynamic-word">{{ word }}</span></h3>
+                <h3>Word: <span id="dynamic-word">{{ word }}</span></h3>
             </div>
             <div class="sort-icons">
+                <span class="sort-icon" id="bad-links-icon" title="Bad links"><i class="fa-solid fa-link-slash"></i></span>
+                <span class="sort-icon" id="top-results-icon" title="Top results"><i class="fa-solid fa-table"></i></span>
                 <span class="sort-icon" id="graph-icon" title="Graphs"><i class="fa-solid fa-bar-chart"></i></span>
                 <span class="sort-icon" id="download-icon" title="Download JSON"><i class="fa-solid fa-download"></i></span>
                 <span class="sort-icon" id="sortAsc" title="Sort A-Z"><i class="fa-solid fa-arrow-down-a-z"></i></span>
                 <span class="sort-icon" id="sortDesc" title="Sort Z-A"><i class="fa-solid fa-arrow-up-a-z"></i></span>
+            </div>
+            <div id="badLinksModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <div id="modal-body">
+                        <table id="bad-links-table">
+                            <thead>
+                                <tr>
+                                    <th>Website</th>
+                                    <th>Link</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="card-container">

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebscrapniTo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+</head>
+<body style="background: lightgoldenrodyellow">
+    <div class="wrapper">
+        <div class="logo-literature-container">
+            <div class="logo">
+                <img id="logo" src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo">
+            </div>
+        </div>
+        <div class="functionality">
+            <div class="functionality-navigation">
+                <a class="home-icon" href="{{ url_for('literature', word=word) }}"><span id="home-icon" class="material-symbols-outlined" title="Back home">arrow_back</span></a>
+            </div>
+        </div>
+        <div class="tab">
+            <button class="tablinks" onclick="openTab(event, 'TopKeywords')">Top Keywords</button>
+            <button class="tablinks" onclick="openTab(event, 'TopAuthors')">Top Authors</button>
+            <button class="tablinks" onclick="openTab(event, 'TopCitations')">Top Citations</button>
+        </div>
+        <div id="TopKeywords" class="tabcontent">
+            <div class="table-container" id="table-container-top-keywords">
+                <h2 class="top-keywords-header">TOP 10 most frequently occurring keywords</h2>
+            </div>
+        </div>
+        <div id="TopAuthors" class="tabcontent">
+            <div class="table-container" id="table-container-top-authors">
+                <h2 class="top-keywords-header">TOP 10 most frequently occurring authors</h2>
+            </div>
+        </div>
+        <div id="TopCitations" class="tabcontent">
+            <div class="table-container" id="table-container-top-citations">
+                <h2 class="top-keywords-header">TOP 10 articles with the most citations</h2>
+            </div>
+        </div>
+    </div>
+    <script>
+         fetch(`/top_keywords?word={{ word }}`)
+            .then(response => response.json())
+            .then(data => {
+                renderTableForKeywords(data.top_keywords);
+            })
+            .catch(error => {
+                console.error('Error fetching top keywords:', error);
+            });
+
+        function renderTableForKeywords(data) {
+            const tableContainer = document.getElementById('table-container-top-keywords');
+            const table = document.createElement('table');
+            table.classList.add('top');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            const headerRow = document.createElement('tr');
+            const thKeyword = document.createElement('th');
+            thKeyword.textContent = 'Keyword';
+            const thFrequency = document.createElement('th');
+            thFrequency.textContent = 'Frequency';
+            headerRow.appendChild(thKeyword);
+            headerRow.appendChild(thFrequency);
+            thead.appendChild(headerRow);
+
+            data.forEach(keyword => {
+                const row = document.createElement('tr');
+                const tdKeyword = document.createElement('td');
+                tdKeyword.textContent = keyword[0];
+                const tdFrequency = document.createElement('td');
+                tdFrequency.textContent = keyword[1];
+                row.appendChild(tdKeyword);
+                row.appendChild(tdFrequency);
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+        }
+        fetch(`/top_authors?word={{ word }}`)
+            .then(response => response.json())
+            .then(data => {
+                renderTableForAuthors(data.top_authors);
+            })
+        .catch(error => {
+            console.error('Error fetching top authors:', error);
+        });
+
+        function renderTableForAuthors(data) {
+            const tableContainer = document.getElementById('table-container-top-authors');
+            const table = document.createElement('table');
+            table.classList.add('top');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            const headerRow = document.createElement('tr');
+            const thAuthor = document.createElement('th');
+            thAuthor.textContent = 'Author';
+            const thFrequency = document.createElement('th');
+            thFrequency.textContent = 'Frequency';
+            headerRow.appendChild(thAuthor);
+            headerRow.appendChild(thFrequency);
+            thead.appendChild(headerRow);
+
+            data.forEach(author => {
+                const row = document.createElement('tr');
+                const tdAuthor = document.createElement('td');
+                tdAuthor.textContent = author[0];
+                const tdFrequency = document.createElement('td');
+                tdFrequency.textContent = author[1];
+                row.appendChild(tdAuthor);
+                row.appendChild(tdFrequency);
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+        }
+
+        fetch(`/top_articles_with_most_citations?word={{ word }}`)
+            .then(response => response.json())
+            .then(data => {
+                renderTableForTopArticles(data.top_articles_with_most_citations);
+        })
+            .catch(error => {
+            console.error('Error fetching top articles with most citations:', error);
+        });
+
+        function renderTableForTopArticles(data) {
+            const tableContainer = document.getElementById('table-container-top-citations');
+            const table = document.createElement('table');
+            table.classList.add('top');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            const headerRow = document.createElement('tr');
+            const thArticleTitle = document.createElement('th');
+            thArticleTitle.textContent = 'Article Title';
+            const thCitationsCount = document.createElement('th');
+            thCitationsCount.textContent = 'Citations Count';
+            headerRow.appendChild(thArticleTitle);
+            headerRow.appendChild(thCitationsCount);
+            thead.appendChild(headerRow);
+
+            data.forEach(article => {
+                const row = document.createElement('tr');
+                const tdArticleTitle = document.createElement('td');
+                tdArticleTitle.textContent = article.article_title;
+                const tdCitationsCount = document.createElement('td');
+                tdCitationsCount.textContent = article.citations_count;
+                row.appendChild(tdArticleTitle);
+                row.appendChild(tdCitationsCount);
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+        }
+    </script>
+
+<script src="{{ url_for('static', filename='js/top_results.js' )}}"></script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -17,6 +18,6 @@ def create_app():
         from .spiders import hindawi, sciendo
         db.create_all()
 
-    # migrate = Migrate(app, db)
+    migrate = Migrate(app, db)
 
     return app
