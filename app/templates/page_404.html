@@ -15,5 +15,9 @@
             <img id="logo" src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo">
         </div>
     </div>
+    <div class="logo-not-found">
+        <img id="logo" src="{{ url_for('static', filename='images/404.svg') }}" alt="Logo">
+        <a href="{{ url_for('index') }}"><h3 class="page-not-found-text">Return to search</h3></a>
+    </div>
 </body>
 </html>

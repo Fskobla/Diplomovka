@@ -653,3 +653,18 @@
         font-size: 15px;
     }
 }
+
+/* 404 PAGE */
+.logo-not-found{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.page-not-found-text, .page-not-found-text:active, .page-not-found-text:link, .page-not-found-text:visited{
+    cursor: pointer;
+    text-decoration: none;
+    list-style: none;
+    color: black;
+}
