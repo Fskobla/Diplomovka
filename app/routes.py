@@ -1,5 +1,4 @@
 import asyncio
-import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
@@ -7,8 +6,9 @@ from functools import partial
 from flask import render_template, request, redirect, url_for, jsonify, abort
 from app.spiders.hindawi import Hindawi
 from app.spiders.sciendo import Sciendo
-from app.models import Links, BadLinks, Keywords
+from app.models import Links, BadLinks
 from app import db
+from app.spiders.springer import Springer
 from app.spiders.utils.database_operations import remove_links_from_database, remove_bad_links_from_database
 
 
@@ -30,14 +30,16 @@ def init_app_routes(app):
             word = request.form.get('search_word')
             hindawi_value = request.form.get('hindawi_value')
             sciendo_value = request.form.get('sciendo_value')
+            springer_value = request.form.get('springer_value')
             print(sciendo_value)
             print(hindawi_value)
+            print(springer_value)
             print("SLOVO:", word)
             if word != '':
                 print("SOM TU")
                 remove_bad_links_from_database(db, word)
                 remove_links_from_database(db, word)
-                if hindawi_value is None and sciendo_value is None:
+                if hindawi_value is None and sciendo_value is None and springer_value is None:
                     print("OBOJE NULL")
                     return render_template('index.html')
 
@@ -49,6 +51,10 @@ def init_app_routes(app):
                     sciendo = Sciendo(word)
                     await sciendo.scrape_links()
 
+                async def scrape_springer():
+                    springer = Springer(word)
+                    await springer.scrape_links()
+
                 # Execute scraping tasks concurrently using asyncio within threads
                 with ThreadPoolExecutor() as executor:
                     tasks = []
@@ -58,6 +64,9 @@ def init_app_routes(app):
                     if sciendo_value == 'true':
                         print("SCIENDO")
                         tasks.append(partial(run_async_function_in_thread, scrape_sciendo))
+                    if springer_value == 'true':
+                        print("SPRINGER")
+                        tasks.append(partial(run_async_function_in_thread, scrape_springer))
 
                     # Run scraping tasks concurrently
                     for task in tasks:

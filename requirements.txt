@@ -6,7 +6,6 @@ alembic~=1.13.1
 psycopg2~=2.9.9
 Flask-Migrate~=4.0.7
 Flask-SQLAlchemy~=3.1.1
-celery~=5.3.6
 networkx~=3.3
 matplotlib~=3.8.4
 SQLAlchemy~=2.0.29
