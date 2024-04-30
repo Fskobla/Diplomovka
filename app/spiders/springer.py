@@ -1,3 +1,4 @@
+import logging
 import time
 
 import requests
@@ -36,107 +37,58 @@ class Springer:
         if len(links) == 0:
             return
 
+        db_session = db.session()
+
         for i in range(len(links)):
             response = requests.get(links[i])
-            time.sleep(0.4)
             if response.status_code == 200:
                 page = BeautifulSoup(response.content, features='html.parser')
                 print(i)
-                # Link
-                link = response.url
-                print(link)
-
-                # Image
-                image_picture_tag = page.find('picture')
-                if image_picture_tag:
-                    image_img_tag = image_picture_tag.find('img')
-                    if image_img_tag.attrs.get("src"):
-                        image = image_img_tag.attrs.get("src")
-                    else:
-                        image = ""
-                else:
-                    image = ""
-
-                # Description
-                description_div_tag = page.find('div', class_='c-article-section__content')
-                if description_div_tag:
-                    description_p_tag = description_div_tag.find('p')
-                    if description_p_tag:
-                        description = description_p_tag.text.encode('utf-8').decode('utf-8')
-                    else:
-                        raise BadLinkException("Description missing")
-                else:
-                    raise BadLinkException("Description missing")
-
-                # Article title
-                article_title_header_tag = page.find('h1', class_="c-article-title")
-                if article_title_header_tag:
-                    article_title = article_title_header_tag.text.encode('utf-8').decode('utf-8')
-                else:
-                    raise BadLinkException("Article title missing")
-
-                # Published date
-                date_tag = page.find("time")
-                if date_tag:
-                    date = date_tag.text
-                else:
-                    raise BadLinkException("Published date missing")
-
-                # Authors
-                authors_array = page.find_all("meta", {"name": "dc.creator"})
-
-                # Citations
-                citations = []
-                citations_ul_tag = page.find('ul', class_='c-article-references')
-                if citations_ul_tag:
-                    citations_li_tags = citations_ul_tag.find_all("li")
-                    if citations_li_tags:
-                        for li in citations_li_tags:
-                            p_tag = li.find("p", class_='c-article-references__text')
-                            citation = p_tag.text
-                            citations.append(citation)
-                db_citations = [Citations(reference=citation) for citation in citations]
-                db_links = Links(link=link, source='Springer', word=self.word, description=description,
-                                         article_title=article_title, image=image, date=date)
-
                 try:
+                    # Extracting data
+                    link = response.url
+                    image_picture_tag = page.find('picture')
+                    image = image_picture_tag.find('img').attrs.get("src") if image_picture_tag else ""
+                    description_div_tag = page.find('div', class_='c-article-section__content')
+                    description = description_div_tag.find('p').text if description_div_tag else ""
+                    article_title_header_tag = page.find('h1', class_="c-article-title")
+                    article_title = article_title_header_tag.text if article_title_header_tag else ""
+                    date_tag = page.find("time")
+                    date = date_tag.text if date_tag else ""
+                    authors_array = page.find_all("meta", {"name": "dc.creator"})
+                    citations_ul_tag = page.find('ul', class_='c-article-references')
+                    citations = [li.find("p", class_='c-article-references__text').text for li in
+                                 citations_ul_tag.find_all("li")] if citations_ul_tag else []
+
+                    # Storing data in database
+                    db_links = Links(link=link, source='Springer', word=self.word, description=description,
+                                     article_title=article_title, image=image, date=date)
                     db.session.add(db_links)
                     db.session.commit()
 
                     db_authors = [Authors(name=name, link_id=db_links.id) for name in get_authors(authors_array)]
                     db_keywords = [Keywords(word=keyword, link_id=db_links.id) for keyword in
-                                           extract_keywords(description)]
+                                   extract_keywords(description)]
 
                     db_links.authors = db_authors
                     db_links.keywords = db_keywords
-                    db_links.citations = db_citations
+                    db_links.citations = [Citations(reference=citation) for citation in citations]
 
                     db.session.add(db_links)
                     db.session.commit()
-                except UnicodeEncodeError:
+
+                except Exception as e:
+                    logging.error(f"Error processing link {link}: {e}")
                     db.session.rollback()
-                    db_bad_links = BadLinks(word=self.word, reason="Problematic encoding", bad_link=response.url, source='Springer')
-                    db.session.add(db_bad_links)
-                    db.session.commit()
-                except BadLinkException as e:
-                    print(e)
-                    db.session.rollback()
-                    db_bad_links = BadLinks(word=self.word, reason=str(e), bad_link=response.url, source='Springer')
-                    db.session.add(db_bad_links)
-                    db.session.commit()
-                except (psycopg2.errors.UniqueViolation, Exception) as e:
-                    print(e)
-                    db.session.rollback()
-                    db_bad_links = BadLinks(word=self.word, reason="Already in database",
-                                            bad_link=response.url, source='Springer')
+                    db_bad_links = BadLinks(word=self.word, reason=str(e), bad_link=link, source='Springer')
                     db.session.add(db_bad_links)
                     db.session.commit()
                 finally:
                     db.session.close()
-            # Status code not OK - Add to table as BadLink
+
             else:
                 db_bad_links = BadLinks(word=self.word, reason=f"Response code {response.status_code}",
-                                            bad_link=response.url, source='Springer')
+                                        bad_link=response.url, source='Springer')
                 db.session.add(db_bad_links)
                 db.session.commit()
                 db.session.close()
