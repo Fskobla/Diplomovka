@@ -1,7 +1,9 @@
 import json
+import logging
 import time
 
 import requests
+import yake
 from bs4 import BeautifulSoup
 import psycopg2.errors
 from sqlalchemy.exc import IntegrityError
@@ -77,88 +79,69 @@ class Sciendo:
                     data = json.loads(page.find('script', id="__NEXT_DATA__", type='application/json').text.encode('utf-8', 'ignore'))
 
                     # Link
-                    try:
-                        link = response.url
-                    except (psycopg2.errors.UniqueViolation, UnicodeEncodeError):
-                        raise BadLinkException("Link url problematic encoding")
+                    link = response.url
 
                     # Image if exists
                     image = data['props']['pageProps']['product']['coverUrl']
 
                     # Published date
-                    try:
-                        date = data['props']['pageProps']['product']['articleData']['publishedDate']
-                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
-                        raise BadLinkException("Published date is missing")
+                    date = data['props']['pageProps']['product']['articleData']['publishedDate']
 
                     # Description
-                    try:
-                        description = data['props']['pageProps']['product']['longDescription']
-                        if isinstance(description, list):
-                            description = [d.encode('utf-8', 'ignore').decode('utf-8', 'ignore') for d in description]
-                        else:
-                            description = description.encode('utf-8', 'ignore').decode('utf-8', 'ignore')
-                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
-                        raise BadLinkException("Description missing")
+                    description = data['props']['pageProps']['product']['longDescription']
+                    if isinstance(description, list):
+                        description = [d.encode('utf-8', 'ignore').decode('utf-8', 'ignore') for d in description]
+                    else:
+                        description = description.encode('utf-8', 'ignore').decode('utf-8', 'ignore')
 
                     # Article_title
-                    try:
-                        article_title = data['props']['pageProps']['product']['articleData']['articleTitle']
-                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
-                        raise BadLinkException("Article title missing")
+                    article_title = data['props']['pageProps']['product']['articleData']['articleTitle']
 
                     # Authors
-                    try:
-                        authors = get_authors(
+                    authors = get_authors(
                             data['props']['pageProps']['product']['articleData']['contribGroup']['contrib'])
-                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
-                        raise BadLinkException("Authors missing")
 
                     # Keywords
-                    try:
+                    if data['props']['pageProps']['product']['articleData']['keywords'] and description:
                         keywords = data['props']['pageProps']['product']['articleData']['keywords']
-                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
-                        raise BadLinkException("Keywords missing")
+                    else:
+                        keywords = extract_keywords(description)
 
                     # Citations
-                    try:
-                        citations = get_citations(data['props']['pageProps']['product']['articleData']['referenceList'])
-                    except (KeyError, UnicodeEncodeError, AttributeError, TypeError):
-                        raise BadLinkException("Citations missing")
+                    citations = get_citations(data['props']['pageProps']['product']['articleData']['referenceList'])
 
-                    db_citations = [Citations(reference=citation) for citation in citations]
-                    db_links = Links(link=link, word=self.word, source='Sciendo', description=description, article_title=article_title,
-                                     image=image, date=date)
+                    db_links = Links(link=link, source='Springer', word=self.word, description=description,
+                                     article_title=article_title, image=image, date=date)
                     db.session.add(db_links)
-                    db.session.commit()
+                    db.session.commit()  # Commit the link to get the primary key
 
-                    db_keywords = [Keywords(word=keyword) for keyword in keywords]
+                    # Now db_links has an ID
                     db_authors = [Authors(name=name) for name in authors]
+                    db_keywords = [Keywords(word=keyword) for keyword in keywords]
 
-                    db_links.authors = db_authors
-                    db_links.keywords = db_keywords
-                    db_links.citations = db_citations
-                    db.session.add(db_links)
+                    # Associate authors and keywords with the link
+                    db_links.authors.extend(db_authors)
+                    db_links.keywords.extend(db_keywords)
+                    db_links.citations = [Citations(reference=citation) for citation in citations]
+
+                    # Add the authors, keywords, and citations to the session and commit
+                    db.session.add_all(db_authors)
+                    db.session.add_all(db_keywords)
                     db.session.commit()
-                    print(response.url)
-                except BadLinkException as e:
-                    print(e)
+                except Exception as e:
+                    logging.error(f"Error processing link {link}: {e}")
                     db.session.rollback()
-                    db_bad_links = BadLinks(word=self.word, reason=str(e),
-                                            bad_link=response.url, source='Sciendo')
-                    db.session.add(db_bad_links)
-                    db.session.commit()
-                except (psycopg2.errors.UniqueViolation, IntegrityError) as e:
-                    print(e)
-                    db.session.rollback()
-                    db_bad_links = BadLinks(word=self.word,
-                                            reason="Already in database",
-                                            bad_link=response.url, source='Sciendo')
-                    db.session.add(db_bad_links)
-                    db.session.commit()
+                    if BadLinks.query.filter_by(bad_link=link).first() is not None:
+                        continue
+                    else:
+                        db_bad_links = BadLinks(word=self.word, bad_link=link, source='Springer')
+                        db.session.add(db_bad_links)
+                        db.session.commit()
+                finally:
+                    db.session.close()
+
             else:
-                db_bad_links = BadLinks(word=self.word,
-                                        reason=f"Response code {response.status_code}", bad_link=response.url,
+                db_bad_links = BadLinks(word=self.word, bad_link=response.url,
                                         source='Sciendo')
                 db.session.add(db_bad_links)
                 db.session.commit()
@@ -183,3 +166,29 @@ def get_citations(citations_json):
         citations.append(citations_json[i]['citeString'])
 
     return citations
+
+def extract_keywords(text):
+    keywords = []
+
+    if text != "":
+        language = "en"
+        # Max length of keyword = 2
+        max_ngram_size = 2
+        # Parameter for duplications in keywords
+        deduplication_thresold = 0.9
+        deduplication_algo = 'seqm'
+        window_size = 1
+        # Max keywords = 10
+        num_of_keywords = 10
+
+        custom_kw_extractor = yake.KeywordExtractor(lan=language, n=max_ngram_size, dedupLim=deduplication_thresold,
+                                                    dedupFunc=deduplication_algo, windowsSize=window_size, top=num_of_keywords,
+                                                    features=None)
+        all_keywords = custom_kw_extractor.extract_keywords(text)
+
+        for kw, s in all_keywords:
+            # At least 1% similarity
+            if s > 0.01:
+                keywords.append(kw)
+
+    return keywords

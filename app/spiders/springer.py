@@ -37,8 +37,6 @@ class Springer:
         if len(links) == 0:
             return
 
-        db_session = db.session()
-
         for i in range(len(links)):
             response = requests.get(links[i])
             if response.status_code == 200:
@@ -48,46 +46,61 @@ class Springer:
                     # Extracting data
                     link = response.url
                     image_picture_tag = page.find('picture')
-                    image = image_picture_tag.find('img').attrs.get("src") if image_picture_tag else ""
+                    if image_picture_tag:
+                        image = image_picture_tag.find('img').attrs.get("src")
+
                     description_div_tag = page.find('div', class_='c-article-section__content')
-                    description = description_div_tag.find('p').text if description_div_tag else ""
+                    if description_div_tag:
+                        description = description_div_tag.find('p').text
+
                     article_title_header_tag = page.find('h1', class_="c-article-title")
-                    article_title = article_title_header_tag.text if article_title_header_tag else ""
+                    if article_title_header_tag:
+                        article_title = article_title_header_tag.text
+
                     date_tag = page.find("time")
-                    date = date_tag.text if date_tag else ""
+                    if date_tag:
+                        date = date_tag.text
+
                     authors_array = page.find_all("meta", {"name": "dc.creator"})
                     citations_ul_tag = page.find('ul', class_='c-article-references')
-                    citations = [li.find("p", class_='c-article-references__text').text for li in
-                                 citations_ul_tag.find_all("li")] if citations_ul_tag else []
+                    if citations_ul_tag:
+                        citations = [li.find("p", class_='c-article-references__text').text for li in
+                                     citations_ul_tag.find_all("li")] if citations_ul_tag else []
 
                     # Storing data in database
                     db_links = Links(link=link, source='Springer', word=self.word, description=description,
                                      article_title=article_title, image=image, date=date)
                     db.session.add(db_links)
-                    db.session.commit()
+                    db.session.commit()  # Commit the link to get the primary key
 
-                    db_authors = [Authors(name=name, link_id=db_links.id) for name in get_authors(authors_array)]
-                    db_keywords = [Keywords(word=keyword, link_id=db_links.id) for keyword in
-                                   extract_keywords(description)]
+                    # Now db_links has an ID
+                    db_authors = [Authors(name=name) for name in get_authors(authors_array)]
+                    db_keywords = [Keywords(word=keyword) for keyword in extract_keywords(description)]
 
-                    db_links.authors = db_authors
-                    db_links.keywords = db_keywords
+                    # Associate authors and keywords with the link
+                    db_links.authors.extend(db_authors)
+                    db_links.keywords.extend(db_keywords)
                     db_links.citations = [Citations(reference=citation) for citation in citations]
 
-                    db.session.add(db_links)
+                    # Add the authors, keywords, and citations to the session and commit
+                    db.session.add_all(db_authors)
+                    db.session.add_all(db_keywords)
                     db.session.commit()
 
                 except Exception as e:
                     logging.error(f"Error processing link {link}: {e}")
                     db.session.rollback()
-                    db_bad_links = BadLinks(word=self.word, reason=str(e), bad_link=link, source='Springer')
-                    db.session.add(db_bad_links)
-                    db.session.commit()
+                    if BadLinks.query.filter_by(bad_link=link).first() is not None:
+                        continue
+                    else:
+                        db_bad_links = BadLinks(word=self.word, bad_link=link, source='Springer')
+                        db.session.add(db_bad_links)
+                        db.session.commit()
                 finally:
                     db.session.close()
 
             else:
-                db_bad_links = BadLinks(word=self.word, reason=f"Response code {response.status_code}",
+                db_bad_links = BadLinks(word=self.word,
                                         bad_link=response.url, source='Springer')
                 db.session.add(db_bad_links)
                 db.session.commit()

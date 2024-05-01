@@ -12,6 +12,10 @@
     background: lightgoldenrodyellow;
 }
 
+input[type="checkbox"]{
+    margin-right: 3px;
+}
+
 .flex-container {
   display: flex;
   flex-direction: row;

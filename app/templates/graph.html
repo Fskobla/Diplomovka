@@ -18,10 +18,15 @@
                 <img id="logo" src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo">
             </div>
         </div>
-        <div class="graph-year-container" style="width: 33%; margin: auto">
+        <div class="tab">
+            <button class="tablinks" onclick="openTab(event, 'graphYear')">Graph published year</button>
+            <button class="tablinks" onclick="openTab(event, 'graphCooccurence')">Graph co-occurence</button>
+        </div>
+
+        <div id="graphYear" class="graph-year-container tabcontent" style="width: 33%; margin: auto">
             <canvas id="graph-year" width="100" height="100"></canvas>
         </div>
-        <div class="graph-occurrence-container" style="width: 33%; margin: auto">
+        <div id="graphCooccurence" class="graph-occurrence-container tabcontent" style="width: 33%; margin: auto">
             <div id="graph-occurence"></div>
         </div>
     </div>
@@ -29,6 +34,11 @@
         fetch(`/get_articles_per_year?word={{ word }}`)
             .then(response => response.json())
             .then(data => {
+                renderYearGraph(data)
+            })
+            .catch(error => console.error('Error fetching data:', error));
+
+            function renderYearGraph(data){
                 var years = Object.keys(data);
                 var counts = Object.values(data);
                 var ctx = document.getElementById('graph-year').getContext('2d');
@@ -52,23 +62,7 @@
                         }
                     }
                 });
-            })
-            .catch(error => console.error('Error fetching data:', error));
-
-        fetch(`/get_co_occurrence_data?word={{ word }}`)
-        .then(response => response.json())
-        .then(data => {
-            createGraph(data);
-        })
-        .catch(error => console.error('Error fetching data:', error));
-
-    function createGraph(data) {
-        const svg = d3.select("#graph-occurence")
-            .append("svg")
-            .attr("width", 800)
-            .attr("height", 600);
-
-    }
+            }
     </script>
 <script src="{{ url_for('static', filename='js/graph.js' )}}"></script>
 </body>

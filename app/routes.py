@@ -17,7 +17,7 @@ def init_app_routes(app):
         with app.app_context():
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            loop.set_debug(True)  # Optionally enable debug mode for asyncio
+            loop.set_debug(True)
             try:
                 result = loop.run_until_complete(func(*args, **kwargs))
             finally:
@@ -28,6 +28,7 @@ def init_app_routes(app):
     def index():
         if request.method == 'POST':
             word = request.form.get('search_word')
+            word = str.lower(word)
             hindawi_value = request.form.get('hindawi_value')
             sciendo_value = request.form.get('sciendo_value')
             springer_value = request.form.get('springer_value')
@@ -78,6 +79,7 @@ def init_app_routes(app):
     @app.route('/graph')
     def graph():
         word = request.args.get('word')
+        word = str.lower(word)
         articles = Links.query.filter(Links.word == word).all()
         if word and len(articles) != 0:
             return render_template('graph.html', word=word)
@@ -87,6 +89,7 @@ def init_app_routes(app):
     @app.route('/top_results')
     def top_results():
         word = request.args.get('word')
+        word = str.lower(word)
         articles = Links.query.filter(Links.word == word).all()
         if word and len(articles) != 0:
             return render_template('top_results.html', word=word)
@@ -98,17 +101,19 @@ def init_app_routes(app):
     @app.route('/literature', methods=['GET', 'POST'])
     def literature():
         word = request.args.get('word')
+        word = str.lower(word)
         if word:
             links = Links.query.filter_by(word=word).all()
             if len(links) == 0:
                 abort(404)
-            return render_template('literature.html', links=links, word=word)
+            return render_template('literature.html', links=links, word=str.lower(word))
         else:
             abort(404)
 
     @app.route('/get_articles_per_year')
     def get_articles_per_year():
         word = request.args.get('word')
+        word = str.lower(word)
         if word:
             articles = Links.query.filter(Links.word == word).all()
 
@@ -125,6 +130,7 @@ def init_app_routes(app):
     @app.route('/get_bad_links_by_word')
     def get_bad_links_by_word():
         word = request.args.get('word')
+        word = str.lower(word)
         if word:
             bad_links = BadLinks.query.filter(BadLinks.word == word).all()
 
@@ -144,6 +150,7 @@ def init_app_routes(app):
     @app.route('/get_co_occurrence_data')
     def get_co_occurrence_data():
         word = request.args.get('word')
+        word = str.lower(word)
         if word:
             articles = Links.query.filter_by(word=word).all()
             co_occurrence_data = {}
@@ -169,6 +176,7 @@ def init_app_routes(app):
     def top_keywords():
         # Get the selected word from the query parameters
         word = request.args.get('word')
+        word = str.lower(word)
         if not word:
             return jsonify({"error": "Word parameter is missing"}), 400
 
@@ -192,6 +200,7 @@ def init_app_routes(app):
     def top_authors():
         # Get the selected word from the query parameters
         word = request.args.get('word')
+        word = str.lower(word)
         if not word:
             return jsonify({"error": "Word parameter is missing"}), 400
 
@@ -215,6 +224,7 @@ def init_app_routes(app):
     def top_articles_with_most_citations():
         # Get the word from the query parameters
         word = request.args.get('word')
+        word = str.lower(word)
 
         if not word:
             return jsonify({"error": "Word parameter is missing"}), 400

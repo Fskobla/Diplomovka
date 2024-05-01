@@ -11,8 +11,8 @@ class Links(db.Model):
     image = db.Column(db.Text())
     source = db.Column(db.String(20))
     date = db.Column(db.String(30))
-    authors = db.relationship('Authors', secondary='link_authors', lazy=True, backref=db.backref('link', lazy=True))
-    keywords = db.relationship('Keywords', secondary='link_keywords', lazy=True, backref=db.backref('link', lazy=True))
+    authors = db.relationship('Authors', secondary='link_authors', lazy=True, backref=db.backref('links', lazy=True))
+    keywords = db.relationship('Keywords', secondary='link_keywords', lazy=True, backref=db.backref('links', lazy=True))
     citations = db.relationship('Citations', backref='link', lazy=True)
 
     def __repr__(self):
@@ -48,7 +48,6 @@ link_keywords = db.Table('link_keywords',
 class Keywords(db.Model):
     __tablename__ = "keywords"
     id = db.Column(db.Integer, primary_key=True)
-    link_id = db.Column(db.Integer, db.ForeignKey('links.id'))
     word = db.Column(db.Text())
 
     def __repr__(self):
@@ -68,7 +67,6 @@ class BadLinks(db.Model):
     bad_link = db.Column(db.Text(), nullable=False)
     source = db.Column(db.String(20))
     word = db.Column(db.String(30), nullable=False)
-    reason = db.Column(db.Text())
 
 
 class Citations(db.Model):
@@ -91,7 +89,6 @@ class Citations(db.Model):
 class Authors(db.Model):
     __tablename__ = "authors"
     id = db.Column(db.Integer, primary_key=True)
-    link_id = db.Column(db.Integer, db.ForeignKey('links.id'))
     name = db.Column(db.Text())
 
     def __repr__(self):
@@ -100,6 +97,5 @@ class Authors(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'link_id': self.link_id,
             'name': self.name
         }

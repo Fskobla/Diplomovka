@@ -6,9 +6,7 @@ from bs4 import BeautifulSoup
 import re
 import yake
 from app import db
-from app.models import Links, Authors, Citations, Keywords, BadLinks, link_authors, link_keywords
-from app.spiders.utils.bad_links_exception import BadLinkException
-from app.spiders.utils.database_operations import remove_links_from_database, remove_bad_links_from_database
+from app.models import Links, Authors, Citations, Keywords, BadLinks
 
 
 class Hindawi:
@@ -78,10 +76,7 @@ class Hindawi:
             # Status code OK
             if response.status_code == 200:
                 # Parsing unicode not compatible characters
-                try:
-                    page = BeautifulSoup(response.content, features='html.parser')
-                except UnicodeDecodeError:
-                    page = BeautifulSoup(response.content, from_encoding='utf-8', errors='ignore')
+                page = BeautifulSoup(response.content, features='html.parser')
 
                 try:
                     # Link
@@ -90,85 +85,71 @@ class Hindawi:
                     image = ""
 
                     # Description
+                    description = ""
                     description_tag = page.find("div", class_="articleBody")
                     # Checking all HTML elements for errors (missing)
                     if description_tag:
                         description_p_tag = description_tag.find("p")
                         if description_p_tag:
                             description = description_p_tag.text
-                        else:
-                            raise BadLinkException("Description missing")
-                    else:
-                        raise BadLinkException("Description missing")
 
                     # Article title
+                    article_title = ""
                     article_title_tag = page.find("h1", class_="articleHeader__title")
                     if article_title_tag:
                         article_title = article_title_tag.text
-                    else:
-                        raise BadLinkException("Article title missing")
 
                     # Published date
+                    date = ""
                     date_tag = page.find("div", class_="articleHeader__timeline_item articleHeader__timeline_item_sticky")
                     if date_tag:
                         date_span_tag = date_tag.find("span")
                         if date_span_tag:
                             date = date_span_tag.text
-                        else:
-                            raise BadLinkException("Published date missing")
-                    else:
-                        raise BadLinkException("Published date missing")
 
                     # Authors
+                    authors_array = []
                     authors_div_tag = page.find("div", class_="articleHeader__authors")
                     if authors_div_tag:
                         authors_span_tag = authors_div_tag.find_all("span", class_="articleHeader__authors_author")
                         if authors_span_tag:
                             authors_array = authors_span_tag
-                        else:
-                            raise BadLinkException("Authors missing")
-                    else:
-                        raise BadLinkException("Authors missing")
 
                     # Citations
+                    citations_array = []
                     citations_ol_tag = page.find("ol", class_="ArticleReferences_orderedReferences__mJr9M")
                     if citations_ol_tag:
                         citations_li_tag = citations_ol_tag.find_all("li", class_="ArticleReferences_articleReference__ouEuh")
                         if citations_li_tag:
                             citations_array = citations_li_tag
-                        else:
-                            raise BadLinkException("Citations missing")
-                    else:
-                        raise BadLinkException("Citations missing")
 
                     print(link)
                     # Add data to database (Links table)
-                    db_citations = [Citations(reference=citation) for citation in get_citations(citations_array)]
-                    db_links = Links(link=link, source='Hindawi', word=self.word, description=description, article_title=article_title, image=image, date=date)
+                    db_links = Links(link=link, source='Springer', word=self.word, description=description,
+                                     article_title=article_title, image=image, date=date)
                     db.session.add(db_links)
+                    db.session.commit()  # Commit the link to get the primary key
+
+                    # Now db_links has an ID
+                    db_authors = [Authors(name=name) for name in get_authors(authors_array)]
+                    db_keywords = [Keywords(word=keyword) for keyword in extract_keywords(description)]
+
+                    # Associate authors and keywords with the link
+                    db_links.authors.extend(db_authors)
+                    db_links.keywords.extend(db_keywords)
+                    db_links.citations = [Citations(reference=citation) for citation in get_citations(citations_array)]
+
+                    # Add the authors, keywords, and citations to the session and commit
+                    db.session.add_all(db_authors)
+                    db.session.add_all(db_keywords)
                     db.session.commit()
 
-                    db_authors = [Authors(name=name, link_id=db_links.id) for name in get_authors(authors_array)]
-                    db_keywords = [Keywords(word=keyword, link_id=db_links.id) for keyword in extract_keywords(description)]
-
-                    db_links.authors = db_authors
-                    db_links.keywords = db_keywords
-                    db_links.citations = db_citations
-
-                    db.session.add(db_links)
-                    db.session.commit()
-                # Add bad links to database with created exception as reason
-                except BadLinkException as e:
-                    print(e)
-                    db.session.rollback()
-                    db_bad_links = BadLinks(word=self.word, reason=str(e), bad_link=response.url, source='Hindawi')
-                    db.session.add(db_bad_links)
                     db.session.commit()
                 # Add bad links to database which are already scrapped (same results)
                 except (psycopg2.errors.UniqueViolation, Exception) as e:
                     print(e)
                     db.session.rollback()
-                    db_bad_links = BadLinks(word=self.word, reason="Already in database",
+                    db_bad_links = BadLinks(word=str.lower(self.word),
                                             bad_link=response.url, source='Hindawi')
                     db.session.add(db_bad_links)
                     db.session.commit()
@@ -176,7 +157,7 @@ class Hindawi:
                     db.session.close()
             # Status code not OK - Add to table as BadLink
             else:
-                db_bad_links = BadLinks(word=self.word, reason=f"Response code {response.status_code}", bad_link=response.url, source='Hindawi')
+                db_bad_links = BadLinks(word=str.lower(self.word), bad_link=response.url, source='Hindawi')
                 db.session.add(db_bad_links)
                 db.session.commit()
                 db.session.close()
@@ -193,8 +174,6 @@ def get_authors(authors_array):
             # Removing sequention "and" before last author
             full_author = re.sub("and ", "", full_author)
             authors.append(full_author)
-    else:
-        raise BadLinkException("Authors missing")
 
     return authors
 
@@ -212,12 +191,6 @@ def get_citations(citations_array):
                 if reference_p_tag:
                     reference = reference_p_tag.text
                     citations.append(reference)
-                else:
-                    raise BadLinkException("Citations missing")
-            else:
-                raise BadLinkException("Citations reference missing")
-    else:
-        raise BadLinkException("Citations missing")
 
     return citations
 
@@ -234,8 +207,8 @@ def extract_keywords(text):
         deduplication_thresold = 0.9
         deduplication_algo = 'seqm'
         window_size = 1
-        # Max keywords = 10
-        num_of_keywords = 10
+        # Max keywords = 7
+        num_of_keywords = 7
 
         custom_kw_extractor = yake.KeywordExtractor(lan=language, n=max_ngram_size, dedupLim=deduplication_thresold,
                                                     dedupFunc=deduplication_algo, windowsSize=window_size, top=num_of_keywords,
