@@ -63,7 +63,6 @@ class Hindawi:
             'Priority': 'u=1',
         }
 
-
         # Return if there is no result
         if last_page == 0:
             return 0
