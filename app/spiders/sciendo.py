@@ -239,7 +239,7 @@ class Sciendo:
         if not self.check_link_data(link, link_data):
             return
 
-        db_links = Links(link=link, source='Hindawi', word=self.word, description=link_data['description'],
+        db_links = Links(link=link, source='Sciendo', word=self.word, description=link_data['description'],
                          article_title=link_data['article_title'], image="", date=link_data['date'])
         db.session.add(db_links)
         db.session.commit()  # Commit the link to get the primary key
