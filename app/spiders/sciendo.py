@@ -38,8 +38,13 @@ class Sciendo:
                 'page': str(page_number),
                 'packageType': 'Article'
             }
-
-            response = requests.get('https://intapi.sciendo.com/search/filterData', params=params, headers=headers)
+            # With proxy
+            response = requests.get('https://intapi.sciendo.com/search/filterData', params=params, headers=headers, proxies={
+                                        "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
+                                        "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
+                                    })
+            # Without proxy
+            # response = requests.get('https://intapi.sciendo.com/search/filterData', params=params, headers=headers)
             if response.status_code == 200:
                 json_data = response.json()
                 page_number = page_number + 1
@@ -70,125 +75,190 @@ class Sciendo:
         }
 
         for i in range(len(links)):
-            response = requests.get(links[i], headers=headers)
-            time.sleep(0.4)
+            # With proxy
+            response = requests.get(links[i], headers=headers, proxies={
+                                        "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
+                                        "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
+                                    })
+
+            # Without proxy
+            # response = requests.get(links[i], headers=headers)
+            # time.sleep(0.4)
 
             if response.status_code == 200:
                 page = BeautifulSoup(response.content, features='html.parser')
                 try:
                     data = json.loads(page.find('script', id="__NEXT_DATA__", type='application/json').text.encode('utf-8', 'ignore'))
 
-                    # Link
-                    link = response.url
+                    link_data = self.scrape_link_data(data, response.url)
 
-                    # Image if exists
-                    image = data['props']['pageProps']['product']['coverUrl']
-
-                    # Published date
-                    date = data['props']['pageProps']['product']['articleData']['publishedDate']
-
-                    # Description
-                    description = data['props']['pageProps']['product']['longDescription']
-                    if isinstance(description, list):
-                        description = [d.encode('utf-8', 'ignore').decode('utf-8', 'ignore') for d in description]
-                    else:
-                        description = description.encode('utf-8', 'ignore').decode('utf-8', 'ignore')
-
-                    # Article_title
-                    article_title = data['props']['pageProps']['product']['articleData']['articleTitle']
-
-                    # Authors
-                    authors = get_authors(
-                            data['props']['pageProps']['product']['articleData']['contribGroup']['contrib'])
-
-                    # Keywords
-                    if data['props']['pageProps']['product']['articleData']['keywords'] and description:
-                        keywords = data['props']['pageProps']['product']['articleData']['keywords']
-                    else:
-                        keywords = extract_keywords(description)
-
-                    # Citations
-                    citations = get_citations(data['props']['pageProps']['product']['articleData']['referenceList'])
-
-                    db_links = Links(link=link, source='Springer', word=self.word, description=description,
-                                     article_title=article_title, image=image, date=date)
-                    db.session.add(db_links)
-                    db.session.commit()  # Commit the link to get the primary key
-
-                    # Now db_links has an ID
-                    db_authors = [Authors(name=name) for name in authors]
-                    db_keywords = [Keywords(word=keyword) for keyword in keywords]
-
-                    # Associate authors and keywords with the link
-                    db_links.authors.extend(db_authors)
-                    db_links.keywords.extend(db_keywords)
-                    db_links.citations = [Citations(reference=citation) for citation in citations]
-
-                    # Add the authors, keywords, and citations to the session and commit
-                    db.session.add_all(db_authors)
-                    db.session.add_all(db_keywords)
-                    db.session.commit()
+                    # Add data to database
+                    self.add_to_database(response.url, link_data)
                 except Exception as e:
-                    logging.error(f"Error processing link {link}: {e}")
-                    db.session.rollback()
-                    if BadLinks.query.filter_by(bad_link=link).first() is not None:
-                        continue
-                    else:
-                        db_bad_links = BadLinks(word=self.word, bad_link=link, source='Springer')
-                        db.session.add(db_bad_links)
-                        db.session.commit()
-                finally:
-                    db.session.close()
-
+                    print(e)
+                    continue  # Skip this link and continue with the next one
             else:
-                db_bad_links = BadLinks(word=self.word, bad_link=response.url,
-                                        source='Sciendo')
-                db.session.add(db_bad_links)
-                db.session.commit()
-                db.session.close()
+                self.add_to_bad_links(response.url, f"Response code {response.status_code}")
 
 
-# Parser function for authors
-def get_authors(authors_json):
-    authors = []
+    def scrape_link_data(self, page, url):
+        data = {}
 
-    for i in range(len(authors_json)):
-        authors.append(authors_json[i]['name']['given-names'] + " " + authors_json[i]['name']['surname'])
+        # Scraping link, description, article title, date, authors, keywords, and citations
+        data['link'] = url
+        data['description'] = self.scrape_description(page)
+        data['article_title'] = self.scrape_article_title(page)
+        data['date'] = self.scrape_date(page)
+        data['authors'] = self.scrape_authors(page)
+        data['citations'] = self.scrape_citations(page)
+        data['keywords'] = self.scrape_keywords(page)
+        if not data['keywords'] and data['description'] is not None:
+            data['keywords'] = self.extract_keywords(data['description'])
 
-    return authors
+        return data
+
+    def scrape_article_title(self, data):
+        try:
+            article_title = data['props']['pageProps']['product']['articleData']['articleTitle']
+            return article_title
+        except Exception as e:
+            print(e)
+        return None
 
 
-# Parser function for citations
-def get_citations(citations_json):
-    citations = []
+    def scrape_description(self, data):
+        try:
+            description = data['props']['pageProps']['product']['longDescription']
+            return description
+        except Exception as e:
+            print(e)
+        return None
 
-    for i in range(len(citations_json)):
-        citations.append(citations_json[i]['citeString'])
+    def scrape_image(self, data):
+        try:
+            image = data['props']['pageProps']['product']['coverUrl']
+            return image
+        except Exception as e:
+            print(e)
+        return None
 
-    return citations
+    def scrape_authors(self, data):
+        authors = []
+        try:
+            authors_array = data['props']['pageProps']['product']['articleData']['contribGroup']['contrib']
+            for i in range(len(authors_array)):
+                authors.append(authors_array[i]['name']['given-names'] + " " + authors_array[i]['name']['surname'])
+        except Exception as e:
+            print(e)
+        return authors
 
-def extract_keywords(text):
-    keywords = []
+    def scrape_date(self, data):
+        try:
+            date = data['props']['pageProps']['product']['articleData']['publishedDate']
+            return date
+        except Exception as e:
+            print(e)
 
-    if text != "":
-        language = "en"
-        # Max length of keyword = 2
-        max_ngram_size = 2
-        # Parameter for duplications in keywords
-        deduplication_thresold = 0.9
-        deduplication_algo = 'seqm'
-        window_size = 1
-        # Max keywords = 10
-        num_of_keywords = 10
+    def scrape_citations(self, data):
+        citations = []
+        try:
+            citations_array = data['props']['pageProps']['product']['articleData']['referenceList']
+            for i in range(len(citations_array)):
+                citations.append(citations_array[i]['citeString'])
+        except Exception as e:
+            print(e)
+        return citations
 
-        custom_kw_extractor = yake.KeywordExtractor(lan=language, n=max_ngram_size, dedupLim=deduplication_thresold,
-                                                    dedupFunc=deduplication_algo, windowsSize=window_size, top=num_of_keywords,
-                                                    features=None)
-        all_keywords = custom_kw_extractor.extract_keywords(text)
+    def scrape_keywords(self, data):
+        keywords = []
+        try:
+            keywords = data['props']['pageProps']['product']['articleData']['keywords']
+        except Exception as e:
+            print(e)
+        return keywords
 
-        for kw, s in all_keywords:
-            # At least 1% similarity
-            if s > 0.01:
-                keywords.append(kw)
+    def extract_keywords(self, text):
+        keywords = []
 
-    return keywords
+        if text is not None:
+            language = "en"
+            # Max length of keyword = 2
+            max_ngram_size = 2
+            # Parameter for duplications in keywords
+            deduplication_thresold = 0.9
+            deduplication_algo = 'seqm'
+            window_size = 1
+            # Max keywords = 7
+            num_of_keywords = 7
+
+            custom_kw_extractor = yake.KeywordExtractor(lan=language, n=max_ngram_size, dedupLim=deduplication_thresold,
+                                                        dedupFunc=deduplication_algo, windowsSize=window_size,
+                                                        top=num_of_keywords,
+                                                        features=None)
+            all_keywords = custom_kw_extractor.extract_keywords(text)
+
+            for kw, s in all_keywords:
+                # At least 1% similarity
+                if s > 0.01:
+                    keywords.append(kw)
+
+        return keywords
+
+    def add_to_bad_links(self, link, reason):
+        db_bad_link = BadLinks(word=self.word, bad_link=link, source='Sciendo', reason=reason)
+        db.session.add(db_bad_link)
+        db.session.commit()
+
+    def check_link_data(self, link, link_data):
+
+        if link_data['description'] is None:
+            self.add_to_bad_links(link, "Description missing")
+            return False
+        elif link_data['article_title'] is None:
+            self.add_to_bad_links(link, "Article title missing")
+            return False
+        elif link_data['date'] is None:
+            self.add_to_bad_links(link, "Published date missing")
+            return False
+        elif not link_data['authors']:
+            self.add_to_bad_links(link, "Authors missing")
+            return False
+        elif not link_data['citations']:
+            self.add_to_bad_links(link, "Citations missing")
+            return False
+        elif not link_data['keywords']:
+            self.add_to_bad_links(link, "Keywords missing")
+            return False
+        else:
+            return True
+    def add_to_database(self, link, link_data):
+        existing_link = Links.query.filter_by(link=link).first()
+        if existing_link:
+            self.add_to_bad_links(link, "Already in database")
+            return
+        if not self.check_link_data(link, link_data):
+            return
+
+        db_links = Links(link=link, source='Hindawi', word=self.word, description=link_data['description'],
+                         article_title=link_data['article_title'], image="", date=link_data['date'])
+        db.session.add(db_links)
+        db.session.commit()  # Commit the link to get the primary key
+
+        db_authors = [Authors(name=name) for name in link_data['authors']]
+        db.session.add_all(db_authors)
+        db.session.commit()
+
+        db_citations = [Citations(reference=reference) for reference in link_data['citations']]
+        db.session.add_all(db_citations)
+        db.session.commit()
+
+        db_keywords = [Keywords(word=word) for word in link_data['keywords']]
+        db.session.add_all(db_keywords)
+        db.session.commit()
+
+        # Associate authors and citations with the link
+        db_links.authors.extend(db_authors)
+        db_links.citations.extend(db_citations)
+        db_links.keywords.extend(db_keywords)
+
+        db.session.commit()

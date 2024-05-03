@@ -67,6 +67,7 @@ class BadLinks(db.Model):
     bad_link = db.Column(db.Text(), nullable=False)
     source = db.Column(db.String(20))
     word = db.Column(db.String(30), nullable=False)
+    reason = db.Column(db.Text())
 
 
 class Citations(db.Model):
