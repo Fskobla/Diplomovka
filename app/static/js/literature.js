@@ -96,10 +96,15 @@ function filterCards() {
                     isVisible = card.querySelector(".article-title").innerText.toUpperCase().indexOf(filter) > -1;
                     break;
                 case 'author':
-                    isVisible = card.querySelector(".author-item").innerText.toUpperCase().indexOf(filter) > -1;
+                    var authors = card.querySelectorAll(".author-item");
+                    authors.forEach(function(author){
+                        if (author.innerText.toUpperCase().indexOf(filter) > - 1){
+                            isVisible = true;
+                        }
+                    });
                     break;
-                    case 'keyword':
-                        var keywords = card.querySelectorAll(".keyword-item");
+                case 'keyword':
+                    var keywords = card.querySelectorAll(".keyword-item");
                     keywords.forEach(function(keyword) {
                         if (keyword.innerText.toUpperCase().indexOf(filter) > -1) {
                             isVisible = true;
