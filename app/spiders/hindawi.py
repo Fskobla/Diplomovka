@@ -16,7 +16,24 @@ class Hindawi:
     def get_last_page(self):
         first_page = 1
 
-        response = requests.get(f'https://www.hindawi.com/search/all/{self.word}/page/{first_page}/')
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'sk,en-US;q=0.7,en;q=0.3',
+            'Alt-Used': 'www.hindawi.com',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Priority': 'u=1',
+        }
+
+        response = requests.get(f'https://www.hindawi.com/search/all/{self.word}/page/{str(first_page)}/', headers=headers, proxies={
+                                        "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
+                                        "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
+                                    })
 
         if response.status_code == 200:
             html_content = BeautifulSoup(response.content, features='html.parser')
@@ -32,6 +49,21 @@ class Hindawi:
         last_page = int(self.get_last_page())
         print(f"Last page:{last_page}")
 
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'sk,en-US;q=0.7,en;q=0.3',
+            'Alt-Used': 'www.hindawi.com',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Priority': 'u=1',
+        }
+
+
         # Return if there is no result
         if last_page == 0:
             return 0
@@ -39,12 +71,12 @@ class Hindawi:
         # Request for every page
         for page_number in range(1, last_page + 1):
             print(page_number)
-            response = requests.get(f'https://www.hindawi.com/search/all/{self.word}/page/' + str(page_number) + '/',
+            response = requests.get(f'https://www.hindawi.com/search/all/{self.word}/page/' + str(page_number) + '/', headers=headers,
                                     proxies={
                                         "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
                                         "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
                                     })
-
+            print(response.status_code)
             if response.status_code == 200:
                 page = BeautifulSoup(response.content, features='html.parser')
                 div = page.find_all("div", class_="ant-card-body")
@@ -64,6 +96,19 @@ class Hindawi:
     def scrape_links(self):
         # All scrapped links
         links = self.get_links()
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'sk,en-US;q=0.7,en;q=0.3',
+            'Alt-Used': 'www.hindawi.com',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Priority': 'u=1',
+        }
 
         # No links found (no actual result on page)
         if len(links) == 0:
@@ -71,7 +116,7 @@ class Hindawi:
 
         # Scrapping process
         for link in links:
-            response = requests.get(link, proxies={
+            response = requests.get(link, headers=headers, proxies={
                 "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
                 "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
             })
