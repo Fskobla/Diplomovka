@@ -1,6 +1,5 @@
 import random
 import re
-import time
 import requests
 import yake
 from bs4 import BeautifulSoup

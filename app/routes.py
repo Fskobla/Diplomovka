@@ -1,9 +1,13 @@
 import asyncio
-from collections import Counter
+import tempfile
+from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
-from flask import render_template, request, redirect, url_for, jsonify, abort
+import networkx as nx
+from flask import render_template, request, redirect, url_for, jsonify, abort, send_file
+from matplotlib import pyplot as plt
+
 from app.spiders.hindawi import Hindawi
 from app.spiders.sciendo import Sciendo
 from app.models import Links, BadLinks
@@ -147,31 +151,6 @@ def init_app_routes(app):
         else:
             return jsonify({"error": "Word parameter missing"}), 400
 
-    @app.route('/get_co_occurrence_data')
-    def get_co_occurrence_data():
-        word = request.args.get('word')
-        word = str.lower(word)
-        if word:
-            articles = Links.query.filter_by(word=word).all()
-            co_occurrence_data = {}
-
-            for article in articles:
-                keywords_in_article = [keyword.word for keyword in article.keywords if keyword.word != word]
-                for keyword in keywords_in_article:
-                    if article.link not in co_occurrence_data:
-                        co_occurrence_data[article.link] = {}
-                    if keyword not in co_occurrence_data[article.link]:
-                        co_occurrence_data[article.link][keyword] = 0
-                    co_occurrence_data[article.link][keyword] += 1
-
-            co_occurrence_data = {link: keywords for link, keywords in co_occurrence_data.items()
-                                  if len(keywords) > 1
-                                  and not all(count == 1 for count in keywords.values())}
-
-            return jsonify(co_occurrence_data)
-        else:
-            return jsonify({"error": "Word parameter missing"}), 400
-
     @app.route('/top_keywords', methods=['GET'])
     def top_keywords():
         # Get the selected word from the query parameters
@@ -219,6 +198,48 @@ def init_app_routes(app):
 
         # Return the result as JSON
         return jsonify({"top_authors": top_10_authors})
+
+    @app.route('/graph_co_occurence', methods=['GET'])
+    def generate_co_occurence_graph():
+        word = request.args.get('word')
+        min_occurrences = 1
+
+        links = Links.query.filter(Links.word == word).all()
+
+        G = nx.Graph()
+        keyword_map = {}
+        keyword_frequency = defaultdict(int)
+        for link in links:
+            article_node = f"{link.id}"
+            G.add_node(article_node)
+            for keyword in link.keywords:
+                keyword_name = keyword.word
+                if keyword_name not in keyword_map:
+                    keyword_node = f"{keyword_name}"
+                    G.add_node(keyword_node)
+                    keyword_map[keyword_name] = keyword_node
+                else:
+                    keyword_node = keyword_map[keyword_name]
+                G.add_edge(article_node, keyword_node)
+                keyword_frequency[keyword_name] += 1
+
+        filtered_keywords = {keyword_name: keyword_node for keyword_name, keyword_node in keyword_map.items()
+                             if keyword_frequency[keyword_name] >= min_occurrences}
+
+        plt.figure(figsize=(19, 10))
+        pos = nx.spring_layout(G)
+        nx.draw(G, pos, with_labels=False, node_size=50, node_color='skyblue')
+
+        for keyword_name, keyword_node in filtered_keywords.items():
+            frequency = keyword_frequency[keyword_name]
+            plt.text(pos[keyword_node][0], pos[keyword_node][1], keyword_name, fontsize=frequency * 2, ha='center')
+
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as temp_file:
+            plt.savefig(temp_file.name)
+
+        plt.close()
+
+        return send_file(temp_file.name, mimetype='image/png')
 
     @app.route('/top_articles_with_most_citations', methods=['GET'])
     def top_articles_with_most_citations():
