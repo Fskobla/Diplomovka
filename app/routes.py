@@ -200,10 +200,8 @@ def init_app_routes(app):
         # Return the result as JSON
         return jsonify({"top_authors": top_10_authors})
 
-    @app.route('/graph_co_occurence', methods=['GET'])
-    def get_co_occurrence():
-        word = request.args.get('word')
-        min_occurrences = 2
+    def get_co_occurrence(word, min_occurrences):
+        number_min_occurrences = int(min_occurrences)
 
         links = Links.query.filter(Links.word == word).all()
 
@@ -235,7 +233,7 @@ def init_app_routes(app):
 
         # Remove nodes based on minimum occurrence
         nodes_to_remove = [keyword_name for keyword_name, frequency in keyword_frequency.items() if
-                           frequency < min_occurrences]
+                           frequency < number_min_occurrences]
         G.remove_nodes_from(nodes_to_remove)
 
         link_ids_to_remove = []
@@ -253,6 +251,10 @@ def init_app_routes(app):
         node_colors = ['orange' if G.nodes[node].get('type') == 'link.id' else 'skyblue' for node in G.nodes()]
         nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=50)
 
+        # FONT LABEL FOR ARTICLES
+        # link_id_labels = {node: node for node in G.nodes() if G.nodes[node].get('type') == 'link.id'}
+        # nx.draw_networkx_labels(G, pos, labels=link_id_labels, font_size=7, font_color='black')
+
         for keyword_name, keyword_node in keyword_map.items():
             if keyword_name not in nodes_to_remove:
                 frequency = keyword_frequency[keyword_name]
@@ -267,12 +269,62 @@ def init_app_routes(app):
 
                 plt.text(pos[keyword_node][0], pos[keyword_node][1], keyword_name, fontsize=text_size, ha='center')
 
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as temp_file:
-            plt.savefig(temp_file.name)
+        gexf_file = tempfile.NamedTemporaryFile(suffix='.gexf', delete=False).name
+        nx.write_gexf(G, gexf_file)
 
+        # Generate image file
+        image_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False).name
+        plt.savefig(image_file)
         plt.close()
 
-        return send_file(temp_file.name, mimetype='image/png')
+        return image_file, gexf_file
+
+    @app.route('/generate_co_occurrence_image', methods=['GET'])
+    def generate_co_occurrence_image():
+        word = request.args.get('word')
+        min_occurrences = request.args.get('min_occurrences')
+        # Call get_co_occurrence function to get the image
+        image_file, gexf_file = get_co_occurrence(word, min_occurrences)
+        # Return the image file
+        return send_file(image_file, mimetype='image/png')
+
+    @app.route('/generate_co_occurrence_gexf', methods=['GET'])
+    def generate_co_occurrence_gexf():
+        word = request.args.get('word')
+        min_occurrences = request.args.get('min_occurrences')
+        # Call get_co_occurrence function to get the .gexf file
+        image_file, gexf_file = get_co_occurrence(word, min_occurrences)
+        # Return the .gexf file
+        return send_file(gexf_file, as_attachment=True)
+
+    @app.route('/generate_source_word_json', methods=['GET'])
+    def generate_source_word_json():
+        # Get the word query parameter
+        word = request.args.get('word')
+
+        # Query the database to fetch the required data
+        if word:
+            links = Links.query.filter_by(word=word).all()
+        else:
+            links = Links.query.all()
+
+        # Aggregate the data based on source and word
+        source_word_count = defaultdict(lambda: defaultdict(int))
+        for link in links:
+            source = link.source
+            word = link.word
+            source_word_count[source][word] += 1
+
+        # Convert the data to JSON format
+        data = []
+        for source, word_count in source_word_count.items():
+            source_data = {
+                'source': source,
+                'counts': [{'word': word, 'count': count} for word, count in word_count.items()]
+            }
+            data.append(source_data)
+
+        return jsonify(data)
 
     @app.route('/top_articles_with_most_citations', methods=['GET'])
     def top_articles_with_most_citations():

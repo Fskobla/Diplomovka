@@ -689,3 +689,43 @@ input[type="checkbox"]{
     justify-content: center;
     display: flex;
 }
+
+/* CO-OCCURENCE GRAPH */
+.graph-occurence{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: auto;
+}
+
+.graph-occurence-navigation{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 50%;
+    margin: 0 auto 5px auto;
+}
+
+.occurence-graph-download-icon{
+    font-size: 22px;
+    margin-left: 8px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 8px 8px 6px -10px #b3c6ff;
+}
+
+.download-icon-hidden{
+    display: none;
+}
+
+#image-co-occurence-graph{
+    cursor: pointer;
+}
+
+#fetch-co-occurence-graph{
+    margin-top: 5px;
+    width: 50%;
+}
