@@ -58,7 +58,7 @@ def init_app_routes(app):
                     await sciendo.scrape_links()
 
                 async def scrape_springer():
-                    springer = Springer(word)
+                    springer = Springer(word, proxy_value)
                     await springer.scrape_links()
 
                 # Execute scraping tasks concurrently using asyncio within threads

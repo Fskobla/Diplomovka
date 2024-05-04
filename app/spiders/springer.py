@@ -12,8 +12,9 @@ from app.spiders.utils.bad_links_exception import BadLinkException
 
 
 class Springer:
-    def __init__(self, word: str):
+    def __init__(self, word: str, proxy):
         self.word = word
+        self.proxy = proxy
 
     def get_links(self):
         links = []
@@ -21,12 +22,17 @@ class Springer:
         last_page = 50
 
         for page_number in range(1, last_page+1):
-            response = requests.get(f'https://link.springer.com/search?new-search=true&query={self.word}&content-type=Article&sortBy=relevance&page={page_number}',
-                                    proxies={
-                                        "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
-                                        "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
-                                    }
-                                    )
+            if self.proxy == 'true':
+                response = requests.get(f'https://link.springer.com/search?new-search=true&query={self.word}&content-type=Article&sortBy=relevance&page={page_number}',
+                                        proxies={
+                                            "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
+                                            "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
+                                        }
+                                        )
+            else:
+                time.sleep(0.4)
+                response = requests.get(f'https://link.springer.com/search?new-search=true&query={self.word}&content-type=Article&sortBy=relevance&page={page_number}')
+
             print(page_number)
             if response.status_code == 200:
                 page = BeautifulSoup(response.content, features='html.parser')
@@ -48,10 +54,14 @@ class Springer:
 
         for link in links:
             try:
-                response = requests.get(link, proxies={
-                    "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
-                    "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
-                })
+                if self.proxy == 'true':
+                    response = requests.get(link, proxies={
+                        "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
+                        "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
+                    })
+                else:
+                    time.sleep(0.4)
+                    response = requests.get(link)
             except Exception as e:
                 self.add_to_bad_links(link, "Bad link url")
                 continue
@@ -151,7 +161,6 @@ class Springer:
             actual_keyword = page.find_all('a', {'data-track-action': 'view keyword'})
             if actual_keyword:
                 for selected_keyword in actual_keyword:
-                    print(selected_keyword.text)
                     keywords.append(selected_keyword.text)
         except Exception as e:
             print(e)
