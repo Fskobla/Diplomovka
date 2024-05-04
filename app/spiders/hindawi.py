@@ -161,8 +161,8 @@ class Hindawi:
                 description_p_tag = description_tag.find("p")
                 if description_p_tag:
                     return description_p_tag.text
-        except UnicodeDecodeError:
-            print("Unicode decode error occurred while scraping description.")
+        except Exception as e:
+            print(e)
         return None
 
     # Function to scrape article title from page
@@ -171,8 +171,8 @@ class Hindawi:
             article_title_tag = page.find("h1", class_="articleHeader__title")
             if article_title_tag:
                 return article_title_tag.text
-        except UnicodeDecodeError:
-            print("Unicode decode error occurred while scraping article title.")
+        except Exception as e:
+            print(e)
         return None
 
     # Function to scrape date from page
@@ -183,8 +183,8 @@ class Hindawi:
                 date_span_tag = date_tag.find("span")
                 if date_span_tag:
                     return date_span_tag.text
-        except UnicodeDecodeError:
-            print("Unicode decode error occurred while scraping date.")
+        except Exception as e:
+            print(e)
         return None
 
     # Function to scrape authors from page
@@ -196,8 +196,8 @@ class Hindawi:
                 authors_span_tag = authors_div_tag.find_all("span", class_="articleHeader__authors_author")
                 if authors_span_tag:
                     return [re.sub("[1-9,]|and ", "", author.text) for author in authors_span_tag]
-        except UnicodeDecodeError:
-            print("Unicode decode error occurred while scraping authors.")
+        except Exception as e:
+            print(e)
         return []
 
     # Function to scrape citations from page
@@ -213,8 +213,8 @@ class Hindawi:
                                                                                                   class_="referenceText")
                     if reference_p_tag:
                         citations.append(reference_p_tag.text)
-        except UnicodeDecodeError:
-            print("Unicode decode error occurred while scraping citations.")
+        except Exception as e:
+            print(e)
 
         return citations
 
