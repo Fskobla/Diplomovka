@@ -16,8 +16,9 @@ from app.spiders.utils.database_operations import remove_links_from_database, re
 
 
 class Sciendo:
-    def __init__(self, word: str):
+    def __init__(self, word: str, proxy):
         self.word = word
+        self.proxy = proxy
 
     def get_links(self):
         links = []
@@ -29,13 +30,16 @@ class Sciendo:
                 'page': str(page_number),
                 'packageType': 'Article'
             }
-            # With proxy
-            response = requests.get('https://intapi.sciendo.com/search/filterData', params=params, headers=get_headers(), proxies={
-                                        "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
-                                        "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
-                                    })
-            # Without proxy
-            # response = requests.get('https://intapi.sciendo.com/search/filterData', params=params, headers=headers)
+
+            if self.proxy == 'true':
+                response = requests.get('https://intapi.sciendo.com/search/filterData', params=params, headers=get_headers(), proxies={
+                                            "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
+                                            "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
+                                        })
+            else:
+                time.sleep(0.4)
+                response = requests.get('https://intapi.sciendo.com/search/filterData', params=params, headers=get_headers())
+
             if response.status_code == 200:
                 json_data = response.json()
                 page_number = page_number + 1
@@ -55,15 +59,14 @@ class Sciendo:
         links = self.get_links()
 
         for i in range(len(links)):
-            # With proxy
-            response = requests.get(links[i], headers=get_headers(), proxies={
-                                        "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
-                                        "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
-                                    })
-
-            # Without proxy
-            # response = requests.get(links[i], headers=headers)
-            # time.sleep(0.4)
+            if self.proxy == 'true':
+                response = requests.get(links[i], headers=get_headers(), proxies={
+                                            "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
+                                            "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
+                                        })
+            else:
+                time.sleep(0.4)
+                response = requests.get(links[i], headers=get_headers())
 
             if response.status_code == 200:
                 page = BeautifulSoup(response.content, features='html.parser')

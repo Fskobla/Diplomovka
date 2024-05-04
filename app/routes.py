@@ -54,7 +54,7 @@ def init_app_routes(app):
                     await hindawi.scrape_links()
 
                 async def scrape_sciendo():
-                    sciendo = Sciendo(word)
+                    sciendo = Sciendo(word, proxy_value)
                     await sciendo.scrape_links()
 
                 async def scrape_springer():
