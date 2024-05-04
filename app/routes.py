@@ -238,6 +238,13 @@ def init_app_routes(app):
                            frequency < min_occurrences]
         G.remove_nodes_from(nodes_to_remove)
 
+        link_ids_to_remove = []
+        for node in G.nodes():
+            if G.nodes[node].get('type') == 'link.id':
+                if G.degree(node) == 0:
+                    link_ids_to_remove.append(node)
+        G.remove_nodes_from(link_ids_to_remove)
+
         plt.figure(figsize=(19, 10))
         pos = nx.spring_layout(G)
         nx.draw(G, pos, with_labels=False, node_size=50)
@@ -250,13 +257,13 @@ def init_app_routes(app):
             if keyword_name not in nodes_to_remove:
                 frequency = keyword_frequency[keyword_name]
                 if frequency <= 5:
-                    text_size = (frequency * 2) + 2
+                    text_size = (frequency * 3) + 2
                 elif 5 < frequency <= 10:
-                    text_size = (frequency * 2) + 1
+                    text_size = (frequency * 3) + 1
                 elif 10 < frequency <= 20:
-                    text_size = (frequency * 2) + 0.5
+                    text_size = (frequency * 3) + 0.5
                 else:
-                    text_size = (frequency * 2) + 0.25
+                    text_size = (frequency * 3) + 0.25
 
                 plt.text(pos[keyword_node][0], pos[keyword_node][1], keyword_name, fontsize=text_size, ha='center')
 
