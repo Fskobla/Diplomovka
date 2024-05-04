@@ -201,9 +201,9 @@ def init_app_routes(app):
         return jsonify({"top_authors": top_10_authors})
 
     @app.route('/graph_co_occurence', methods=['GET'])
-    def generate_co_occurence_graph():
+    def get_co_occurrence():
         word = request.args.get('word')
-        min_occurrences = 1
+        min_occurrences = 2
 
         links = Links.query.filter(Links.word == word).all()
 
@@ -224,16 +224,19 @@ def init_app_routes(app):
                 G.add_edge(article_node, keyword_node)
                 keyword_frequency[keyword_name] += 1
 
-        filtered_keywords = {keyword_name: keyword_node for keyword_name, keyword_node in keyword_map.items()
-                             if keyword_frequency[keyword_name] >= min_occurrences}
+        # Remove nodes based on minimum occurrence
+        nodes_to_remove = [keyword_name for keyword_name, frequency in keyword_frequency.items() if
+                           frequency < min_occurrences]
+        G.remove_nodes_from(nodes_to_remove)
 
         plt.figure(figsize=(19, 10))
         pos = nx.spring_layout(G)
         nx.draw(G, pos, with_labels=False, node_size=50, node_color='skyblue')
 
-        for keyword_name, keyword_node in filtered_keywords.items():
-            frequency = keyword_frequency[keyword_name]
-            plt.text(pos[keyword_node][0], pos[keyword_node][1], keyword_name, fontsize=frequency * 2, ha='center')
+        for keyword_name, keyword_node in keyword_map.items():
+            if keyword_name not in nodes_to_remove:
+                frequency = keyword_frequency[keyword_name]
+                plt.text(pos[keyword_node][0], pos[keyword_node][1], keyword_name, fontsize=frequency * 2, ha='center')
 
         with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as temp_file:
             plt.savefig(temp_file.name)
