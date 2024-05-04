@@ -249,7 +249,16 @@ def init_app_routes(app):
         for keyword_name, keyword_node in keyword_map.items():
             if keyword_name not in nodes_to_remove:
                 frequency = keyword_frequency[keyword_name]
-                plt.text(pos[keyword_node][0], pos[keyword_node][1], keyword_name, fontsize=frequency * 2, ha='center')
+                if frequency <= 5:
+                    text_size = (frequency * 2) + 2
+                elif 5 < frequency <= 10:
+                    text_size = (frequency * 2) + 1
+                elif 10 < frequency <= 20:
+                    text_size = (frequency * 2) + 0.5
+                else:
+                    text_size = (frequency * 2) + 0.25
+
+                plt.text(pos[keyword_node][0], pos[keyword_node][1], keyword_name, fontsize=text_size, ha='center')
 
         with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as temp_file:
             plt.savefig(temp_file.name)
