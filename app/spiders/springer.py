@@ -33,6 +33,7 @@ class Springer:
                 div = page.find_all("a", class_="app-card-open__link")
                 for a in div:
                     link = 'https://link.springer.com' + a.attrs.get("href")
+                    print(link)
                     links.append(link)
         return links
 
@@ -43,10 +44,14 @@ class Springer:
             return
 
         for link in links:
-            response = requests.get(link, proxies={
-                "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
-                "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
-            })
+            try:
+                response = requests.get(link, proxies={
+                    "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
+                    "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
+                })
+            except Exception as e:
+                self.add_to_bad_links(link, "Bad link url")
+                continue
 
             if response.status_code == 200:
                 page = BeautifulSoup(response.content, features='html.parser', from_encoding='utf-8')
@@ -71,8 +76,8 @@ class Springer:
                 description_p_tag = description_div_tag.find('p')
                 if description_p_tag:
                     return description_p_tag.text
-        except UnicodeDecodeError:
-            print("Unicode decode error occurred while scraping description.")
+        except Exception as e:
+            print(e)
         return None
 
     def scrape_image(self, page):
@@ -80,8 +85,8 @@ class Springer:
             image_picture_tag = page.find('picture')
             if image_picture_tag:
                 return image_picture_tag.find('img').attrs.get("src")
-        except UnicodeDecodeError:
-            print("Unicode decode error occurred while scraping image.")
+        except Exception as e:
+            print(e)
         return None
 
     def scrape_authors(self, page):
@@ -93,8 +98,8 @@ class Springer:
                     author_tmp = author['content'].split(", ")
                     author = (author_tmp[1] + " " + author_tmp[0]).strip()
                     authors.append(author)
-        except UnicodeDecodeError:
-            print("Unicode decode error occurred while scraping authors.")
+        except Exception as e:
+            print(e)
         return authors
 
     def scrape_article_title(self, page):
@@ -102,8 +107,8 @@ class Springer:
             article_title_tag = page.find('h1', class_="c-article-title")
             if article_title_tag:
                 return article_title_tag.text
-        except UnicodeDecodeError:
-            print("Unicode decode error occurred while scraping article title.")
+        except Exception as e:
+            print(e)
         return None
 
     def scrape_date(self, page):
@@ -112,23 +117,28 @@ class Springer:
             if date_tag:
                 date = date_tag.text
                 return date
-        except UnicodeDecodeError:
-            print("Unicode decode error occurred while scraping date.")
+        except Exception as e:
+            print(e)
         return None
 
     def scrape_citations(self, page):
         citations = []
 
+        citations_ol_tag = page.find('ol', class_='c-article-references')
+        if citations_ol_tag:
+            citations_list_tag = citations_ol_tag
+        else:
+            citations_list_tag = page.find('ul', class_='c-article-references')
+
         try:
-            citations_ul_tag = page.find('ul', class_='c-article-references')
-            if citations_ul_tag:
-                citations_li_tags = citations_ul_tag.find_all("li")
+            if citations_list_tag:
+                citations_li_tags = citations_list_tag.find_all("li")
                 for citation_li_tag in citations_li_tags:
                     reference_p_tag = citation_li_tag.find("p", class_='c-article-references__text')
                     if reference_p_tag:
                         citations.append(reference_p_tag.text)
-        except UnicodeDecodeError:
-            print("Unicode decode error occurred while scraping citations.")
+        except Exception as e:
+            print(e)
 
         return citations
 
