@@ -36,6 +36,7 @@ def init_app_routes(app):
             hindawi_value = request.form.get('hindawi_value')
             sciendo_value = request.form.get('sciendo_value')
             springer_value = request.form.get('springer_value')
+            proxy_value = request.form.get('proxy_value')
             print(sciendo_value)
             print(hindawi_value)
             print(springer_value)
@@ -49,7 +50,7 @@ def init_app_routes(app):
                     return render_template('index.html')
 
                 async def scrape_hindawi():
-                    hindawi = Hindawi(word)
+                    hindawi = Hindawi(word, proxy_value)
                     await hindawi.scrape_links()
 
                 async def scrape_sciendo():

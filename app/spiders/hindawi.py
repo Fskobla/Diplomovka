@@ -1,5 +1,7 @@
 import random
 import re
+import time
+
 import requests
 import yake
 from bs4 import BeautifulSoup
@@ -8,19 +10,24 @@ from app.models import Links, Authors, Citations, Keywords, BadLinks
 
 
 class Hindawi:
-    def __init__(self, word: str):
+    def __init__(self, word: str, proxy):
         # Searched word
         self.word = word
+        self.proxy = proxy
 
     # Function for getting last page number
     def get_last_page(self):
         first_page = 1
 
-        response = requests.get(f'https://www.hindawi.com/search/all/{self.word}/page/{str(first_page)}/', headers=get_headers(), proxies={
-                                        "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
-                                        "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
-                                    })
+        if self.proxy == 'true':
+            response = requests.get(f'https://www.hindawi.com/search/all/{self.word}/page/{str(first_page)}/', headers=get_headers(), proxies={
+                                            "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
+                                            "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
+                                        })
+        else:
+            response = requests.get(f'https://www.hindawi.com/search/all/{self.word}/page/{str(first_page)}/', headers=get_headers())
 
+        print(response.status_code)
         if response.status_code == 200:
             html_content = BeautifulSoup(response.content, features='html.parser')
             try:
@@ -42,11 +49,16 @@ class Hindawi:
         # Request for every page
         for page_number in range(1, last_page + 1):
             print(page_number)
-            response = requests.get(f'https://www.hindawi.com/search/all/{self.word}/page/' + str(page_number) + '/', headers=get_headers(),
-                                    proxies={
-                                        "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
-                                        "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
-                                    })
+            if self.proxy == 'true':
+                response = requests.get(f'https://www.hindawi.com/search/all/{self.word}/page/' + str(page_number) + '/', headers=get_headers(),
+                                        proxies={
+                                            "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
+                                            "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
+                                        })
+            else:
+                time.sleep(0.4)
+                response = requests.get(f'https://www.hindawi.com/search/all/{self.word}/page/' + str(page_number) + '/', headers=get_headers())
+
             print(response.status_code)
             if response.status_code == 200:
                 page = BeautifulSoup(response.content, features='html.parser')
@@ -74,12 +86,14 @@ class Hindawi:
 
         # Scrapping process
         for link in links:
-            response = requests.get(link, headers=get_headers(), proxies={
-                "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
-                "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
-            })
-            # Delay between requests for not overloading server
-            #time.sleep(0.4)
+            if self.proxy == 'true':
+                response = requests.get(link, headers=get_headers(), proxies={
+                    "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
+                    "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
+                })
+            else:
+                time.sleep(0.4)
+                response = requests.get(link, headers=get_headers())
             print(link)
             # Status code OK
             if response.status_code == 200:
