@@ -31,10 +31,13 @@ class Springer:
             if response.status_code == 200:
                 page = BeautifulSoup(response.content, features='html.parser')
                 div = page.find_all("a", class_="app-card-open__link")
-                for a in div:
-                    link = 'https://link.springer.com' + a.attrs.get("href")
-                    print(link)
-                    links.append(link)
+                if div:
+                    for a in div:
+                        link = 'https://link.springer.com' + a.attrs.get("href")
+                        print(link)
+                        links.append(link)
+                else:
+                    break
         return links
 
     def scrape_links(self):
@@ -142,6 +145,20 @@ class Springer:
 
         return citations
 
+    def scrape_keywords(self, page):
+        keywords = []
+        try:
+            actual_keyword = page.find_all('a', {'data-track-action': 'view keyword'})
+            if actual_keyword:
+                for selected_keyword in actual_keyword:
+                    print(selected_keyword.text)
+                    keywords.append(selected_keyword.text)
+        except Exception as e:
+            print(e)
+        return keywords
+
+
+
     def extract_keywords(self, text):
         keywords = []
 
@@ -180,7 +197,9 @@ class Springer:
         data['date'] = self.scrape_date(page)
         data['authors'] = self.scrape_authors(page)
         data['citations'] = self.scrape_citations(page)
-        data['keywords'] = self.extract_keywords(data['description'])
+        data['keywords'] = self.scrape_keywords(page)
+        if not data['keywords'] and data['description'] is not None:
+            data['keywords'] = self.extract_keywords(data['description'])
 
         return data
 

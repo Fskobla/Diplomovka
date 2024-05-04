@@ -116,10 +116,7 @@
                     <h3 class="keywords-title">Keywords</h3>
                     <ul class="keywords-list">
                         {% for keyword in item.keywords %}
-                            {% if not loop.last %}
-                                <li class="keyword-item">{{ keyword.word }},</li>
-                            {% endif %}
-                            <li class="keyword-item">{{ keyword.word }} </li>
+                            <li class="keyword-item">{{ keyword.word }}{% if not loop.last %},{% endif %}</li>
                         {% endfor %}
                     </ul>
                 </div>
