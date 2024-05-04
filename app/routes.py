@@ -210,11 +210,14 @@ def init_app_routes(app):
         G = nx.Graph()
         keyword_map = {}
         keyword_frequency = defaultdict(int)
+
+        # Create graph and populate keyword_map and keyword_frequency
         for link in links:
             article_node = f"{link.id}"
-            G.add_node(article_node)
+            has_keyword = False  # Flag to check if the link has any keywords
             for keyword in link.keywords:
                 keyword_name = keyword.word
+                has_keyword = True
                 if keyword_name not in keyword_map:
                     keyword_node = f"{keyword_name}"
                     G.add_node(keyword_node)
@@ -224,6 +227,12 @@ def init_app_routes(app):
                 G.add_edge(article_node, keyword_node)
                 keyword_frequency[keyword_name] += 1
 
+            # If the link has no keywords, don't add it to the graph
+            if has_keyword:
+                G.add_node(article_node)
+                # Set attribute to identify link.id nodes
+                G.nodes[article_node]['type'] = 'link.id'
+
         # Remove nodes based on minimum occurrence
         nodes_to_remove = [keyword_name for keyword_name, frequency in keyword_frequency.items() if
                            frequency < min_occurrences]
@@ -231,7 +240,11 @@ def init_app_routes(app):
 
         plt.figure(figsize=(19, 10))
         pos = nx.spring_layout(G)
-        nx.draw(G, pos, with_labels=False, node_size=50, node_color='skyblue')
+        nx.draw(G, pos, with_labels=False, node_size=50)
+
+        # Change color of link.id nodes
+        node_colors = ['orange' if G.nodes[node].get('type') == 'link.id' else 'skyblue' for node in G.nodes()]
+        nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=50)
 
         for keyword_name, keyword_node in keyword_map.items():
             if keyword_name not in nodes_to_remove:
