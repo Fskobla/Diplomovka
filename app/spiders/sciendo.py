@@ -1,5 +1,6 @@
 import json
 import logging
+import random
 import time
 
 import requests
@@ -20,16 +21,6 @@ class Sciendo:
 
     def get_links(self):
         links = []
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'sk,en-US;q=0.7,en;q=0.3',
-            'Origin': 'https://sciendo.com',
-            'Connection': 'keep-alive',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-site',
-        }
 
         page_number = 0
         while True:
@@ -39,7 +30,7 @@ class Sciendo:
                 'packageType': 'Article'
             }
             # With proxy
-            response = requests.get('https://intapi.sciendo.com/search/filterData', params=params, headers=headers, proxies={
+            response = requests.get('https://intapi.sciendo.com/search/filterData', params=params, headers=get_headers(), proxies={
                                         "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
                                         "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
                                     })
@@ -62,21 +53,10 @@ class Sciendo:
 
     def scrape_links(self):
         links = self.get_links()
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'sk,en-US;q=0.7,en;q=0.3',
-            'Origin': 'https://sciendo.com',
-            'Connection': 'keep-alive',
-            'Referer': 'https://sciendo.com/',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-site',
-        }
 
         for i in range(len(links)):
             # With proxy
-            response = requests.get(links[i], headers=headers, proxies={
+            response = requests.get(links[i], headers=get_headers(), proxies={
                                         "http": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/",
                                         "https": "http://eapxljvu-rotate:jvhx8t1hltjj@p.webshare.io:80/"
                                     })
@@ -262,3 +242,56 @@ class Sciendo:
         db_links.keywords.extend(db_keywords)
 
         db.session.commit()
+
+def get_headers():
+    headers = []
+    mozzilla_headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'sk,en-US;q=0.7,en;q=0.3',
+        'Origin': 'https://sciendo.com',
+        'Connection': 'keep-alive',
+        'Referer': 'https://sciendo.com/',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-site',
+    }
+    headers.append(mozzilla_headers)
+
+    chrome_headers = {
+        'accept': 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'accept-language': 'en-US,en;q=0.9',
+        'cache-control': 'max-age=0',
+        'priority': 'u=0, i',
+        'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'same-origin',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    }
+    headers.append(chrome_headers)
+
+    edge_headers = {
+        'accept': 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'accept-language': 'sk,en;q=0.9,en-GB;q=0.8,en-US;q=0.7',
+        'cache-control': 'max-age=0',
+        'priority': 'u=0, i',
+        'sec-ch-ua': '"Chromium";v="124", "Microsoft Edge";v="124", "Not-A.Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'same-origin',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
+    }
+    headers.append(edge_headers)
+
+    header = random.choice(headers)
+
+    return header
