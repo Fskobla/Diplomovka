@@ -248,7 +248,7 @@ class Springer:
             return
 
         db_links = Links(link=link, source='Springer', word=self.word, description=link_data['description'],
-                         article_title=link_data['article_title'], image="", date=link_data['date'])
+                         article_title=link_data['article_title'], image=link_data['image'], date=link_data['date'])
         db.session.add(db_links)
         db.session.commit()  # Commit the link to get the primary key
 
