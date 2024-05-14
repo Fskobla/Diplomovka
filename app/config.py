@@ -1,3 +1,3 @@
-SQLALCHEMY_DATABASE_URI = "postgres://webscrape_user:b1eALv6SOCU8OvIwZLLhdMfnMjwSM7sa@dpg-cp0cp2g21fec7382c6ug-a/webscrape"
+SQLALCHEMY_DATABASE_URI = "postgresql://webscrape:postgres@localhost:5432/webscrape"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 TEMPLATES_AUTO_RELOAD = True
