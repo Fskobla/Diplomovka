@@ -91,6 +91,7 @@ class Sciendo:
         data['link'] = url
         data['description'] = self.scrape_description(page)
         data['article_title'] = self.scrape_article_title(page)
+        data['image'] = self.scrape_image(page)
         data['date'] = self.scrape_date(page)
         data['authors'] = self.scrape_authors(page)
         data['citations'] = self.scrape_citations(page)
@@ -223,7 +224,7 @@ class Sciendo:
             return
 
         db_links = Links(link=link, source='Sciendo', word=self.word, description=link_data['description'],
-                         article_title=link_data['article_title'], image="", date=link_data['date'])
+                         article_title=link_data['article_title'], image=link_data['image'], date=link_data['date'])
         db.session.add(db_links)
         db.session.commit()  # Commit the link to get the primary key
 
