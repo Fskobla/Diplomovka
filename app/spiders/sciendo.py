@@ -142,6 +142,7 @@ class Sciendo:
             return date
         except Exception as e:
             print(e)
+        return None
 
     def scrape_citations(self, data):
         citations = []
